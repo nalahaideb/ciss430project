@@ -1,0 +1,23 @@
+<!-- profile.html -->
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="mb-3">
+                    <div style="width: 100px; height: 100px; background-color: #ccc; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">John Doe</h4>
+                <p class="card-text">johndoe@example.com</p>
+                <p><strong>Goal:</strong> Lose weight and build muscle</p>
+                <p><strong>Bio:</strong> Just a regular person working on fitness goals.</p>
+                <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary mt-2">Edit Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

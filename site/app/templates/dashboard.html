@@ -4,7 +4,7 @@
 {% block content %}
 <div class="row">
     <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
+        <a href="{{ url_for('profile', username=user.username) }}" class="text-decoration-none">
             <div class="card text-white bg-warning mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Profile</h5>
@@ -42,6 +42,51 @@
                 </div>
             </div>
         </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Today's Exercises</div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Exercise</th>
+                            <th>Sets</th>
+                            <th>Reps</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Push-ups</td>
+                            <td>3</td>
+                            <td>12</td>
+                        </tr>
+                        <tr>
+                            <td>Squats</td>
+                            <td>4</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>Plank</td>
+                            <td>3</td>
+                            <td>60s</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Progress Toward Goal</div>
+            <div class="card-body">
+                <div style="height: 300px; background-color: #eee; display: flex; align-items: center; justify-content: center;">
+                    <em>[Progress Chart Here]</em>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

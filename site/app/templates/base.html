@@ -25,12 +25,13 @@
 <body>
    {% if request.endpoint not in ['login', 'register'] %}
     <div class="sidebar">
-        <h5 class="mb-4"><a href="{{ url_for('dashboard') }}" class="text-decoration-none text-dark">Dashboard</a></h5>
-        <a href="#">Profile</a>
+        <h5 class="mb-4"><a href="{{ url_for('dashboard', username=user.username) }}" class="text-decoration-none text-dark">Dashboard</a></h5>
+        <a href="{{ url_for('profile', username=user.username) }}">Profile</a>
         <a href="#">Exercise Plans</a>
         <a href="#">Exercises</a>
         <a href="#">Progress</a>
         <a href="#">Friends</a>
+        <a href="{{ url_for('logout') }}" class="text-danger">Logout</a>
     </div>
     {% endif %}
 <div class="container {% if request.endpoint not in ['login', 'register'] %}content{% endif %}">
