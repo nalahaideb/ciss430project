@@ -1,4 +1,5 @@
 <!-- base.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body { background-color: #f1f1f1; font-family: 'Segoe UI', sans-serif; }
         .card-header { background: linear-gradient(60deg, #ab47bc, #8e24aa); color: white; }
@@ -13,24 +16,25 @@
         .btn-primary:hover { background-color: #7b1fa2; }
         .form-check-input:checked { background-color: #9c27b0; border-color: #9c27b0; }
         .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: none; }
+        .sidebar { height: 100vh; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.1); position: fixed; top: 0; left: 0; padding: 2rem 1rem; width: 220px; }
+        .sidebar a { display: block; margin-bottom: 1rem; color: #333; text-decoration: none; font-weight: 500; }
+        .sidebar a:hover { color: #9c27b0; }
+        .content { margin-left: 240px; padding-top: 2rem; }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-                    
-        {% block content %}{% endblock %}
+   {% if request.endpoint not in ['login', 'register'] %}
+    <div class="sidebar">
+        <h5 class="mb-4"><a href="{{ url_for('dashboard') }}" class="text-decoration-none text-dark">Dashboard</a></h5>
+        <a href="#">Profile</a>
+        <a href="#">Exercise Plans</a>
+        <a href="#">Exercises</a>
+        <a href="#">Progress</a>
+        <a href="#">Friends</a>
+    </div>
+    {% endif %}
+<div class="container {% if request.endpoint not in ['login', 'register'] %}content{% endif %}">
+                {% block content %}{% endblock %}
     </div>
 </body>
 </html>
