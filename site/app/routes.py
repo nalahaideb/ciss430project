@@ -1,5 +1,5 @@
 # file: routes.py
-from flask import render_template
+from flask import render_template, request, redirect, url_for, flash
 from app import app
 
 @app.route('/')
@@ -7,7 +7,7 @@ from app import app
 def index():
     return render_template('index.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     return render_template('login.html')
 

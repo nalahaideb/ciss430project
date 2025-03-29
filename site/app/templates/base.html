@@ -1,0 +1,23 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f1f1f1; font-family: 'Segoe UI', sans-serif; }
+        .card-header { background: linear-gradient(60deg, #ab47bc, #8e24aa); color: white; }
+        .btn-primary { background-color: #9c27b0; border: none; }
+        .btn-primary:hover { background-color: #7b1fa2; }
+        .form-check-input:checked { background-color: #9c27b0; border-color: #9c27b0; }
+        .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: none; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
