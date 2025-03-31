@@ -29,22 +29,24 @@ def create_exercises():
     #all values are varchar, null values are replaced with a "N/A"
     f = open("/home/student/Desktop/ciss430/project/data/megaGymDataset.csv")
     f.readline()
-    try:
-        c.execute("create table exercise (eid INT, ename varchar(100), edesc varchar(500), etype varchar(100), ebpart varchar(100), eequip varchar(100), erating varchar(100), primary key (id))engine=innodb;")
-    except:
-        print("table made, continuing...")
+    # try:
+    #     # c.execute("create table exercise (eid INT, ename varchar(100), edesc varchar(500), etype varchar(100), ebpart varchar(100), eequip varchar(100), erating varchar(100), primary key (id))engine=innodb;")
+    # except:
+    #     print("table made, continuing...")
     for e in f:
         exercise = e.split(',')
         entry = []
+        print("ex len = ", len(exercise))
         for i in exercise:
             entry.append(cleanup(i))
-            try:
-                c.execute("start transaction;")
-                c.execute("insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
-                c.execute("commit;")
-            except:
-                print("erm uh oh stinky, this didnt go in:", "insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
-                
+        # try:
+        print("insert into exercise (eid, ename, edesc, etype, ebpart, eequip, erating) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+        c.execute("start transaction;")
+        c.execute("insert into exercise (eid, ename, edesc, etype, ebpart, eequip, erating) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+        c.execute("commit;")
+        # except:
+        #     print("erm uh oh stinky, this didnt go in:", "insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+create_exercises()
 # def create_user():
 #     c.execute("create table user (uid INT AUTO_INCREMENT, uname varchar(100) NOT_NULL, fname varchar(100) NOT_NULL, lname varchar(100) NOT_NULL, email varchar(100) NOT_NULL, last_login datetime NOT_NULL, creation_date datetime NOT_NULL, primary key (uid))engine=innodb;")
     
