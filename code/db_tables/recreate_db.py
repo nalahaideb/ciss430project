@@ -8,6 +8,23 @@
 ************************************************************************
 '''
 import pymysql
+def create_exercises():    
+#Title,Desc,Type,BodyPart,Equipment,Level,Rating,RatingDesc
+    #all values are varchar, null values are replaced with a "N/A"
+    f = open("/home/student/Desktop/ciss430/project/data/megaGymDataset.csv")
+    f.readline()
+    for e in f:
+        exercise = e.split(',')
+        entry = []
+        for i in exercise:
+            entry.append(cleanup(i))
+            try:
+                c.execute("start transaction;")
+                c.execute("insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+                c.execute("commit;")
+            except:
+                print("erm uh oh stinky, this didnt go in:", "insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+
 #local testing right now, implementing web testing soon
 conn = pymysql.connect(user='root', passwd='root')
 c = conn.cursor(pymysql.cursors.DictCursor)
@@ -24,7 +41,7 @@ c.execute("use exdb;")
 
 #i forget if we're actually giving email to this table or user-credentials
 #also need to add uname to the user table in the UML diag
-c.execute("create table user (uid INT AUTO_INCREMENT, fname VARCHAR(100) NOT NULL, lname VARCHAR(100) NOT NULL, username VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, last_login DATETIME NOT NULL, creation_date DATETIME NOT NULL, primary key (uid));")
+c.execute("create table user (uid INT AUTO_INCREMENT, fname VARCHAR(100) NOT NULL, lname VARCHAR(100) NOT NULL, username VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, last_login DATETIME NOT NULL, creation_date DATETIME NOT NULL, primary key (uid))engine=innodb;")
 
 #need to update the user-credentials table in the UML diag with the 'uid' ref
 #not gonna include email here, unless we want to have that as a sign in option
@@ -54,3 +71,4 @@ c.execute("create table user_records (urid INT AUTO_INCREMENT, ur_uid INT NOT NU
 c.execute("create table goals (gid INT AUTO_INCREMENT, g_uid INT NOT NULL, goal INT, g_exercise INT, primary key (gid), foreign key (g_uid) references user (uid), foreign key (g_exercise) references exercise (eid));")
 
 c.execute("create table progress (pid INT AUTO_INCREMENT, p_gid INT NOT NULL, p_uid INT NOT NULL, primary key (pid), foreign key (p_gid) references goals (gid), foreign key (p_uid) references user (uid));")
+

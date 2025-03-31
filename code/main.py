@@ -45,6 +45,6 @@ def create_exercises():
             except:
                 print("erm uh oh stinky, this didnt go in:", "insert into exercise (id, title_, desc_, type_, bodypart_, equipment_, rating_) values (" + entry[0] + ", '" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
                 
-def create_user():
-    c.execute("create table user (uid INT AUTO_INCREMENT, uname varchar(100) NOT_NULL, fname varchar(100) NOT_NULL, lname varchar(100) NOT_NULL, email varchar(100) NOT_NULL, last_login datetime NOT_NULL, creation_date datetime NOT_NULL, primary key (uid))engine=innodb;")
+# def create_user():
+#     c.execute("create table user (uid INT AUTO_INCREMENT, uname varchar(100) NOT_NULL, fname varchar(100) NOT_NULL, lname varchar(100) NOT_NULL, email varchar(100) NOT_NULL, last_login datetime NOT_NULL, creation_date datetime NOT_NULL, primary key (uid))engine=innodb;")
     
