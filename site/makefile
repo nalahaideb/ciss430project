@@ -14,3 +14,4 @@ RETARD_MODE:
 	pip install flask
 	pip install --upgrade pip
 	pip install flask-debugtoolbar
+	deactivate
