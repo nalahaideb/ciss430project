@@ -7,3 +7,10 @@ run:
 	export FLASK_ENV=development
 	firefox localhost:5000 &
 	flask --app flask_app.py --debug run
+RETARD_MODE:
+	rm venv -r
+	python3 -m venv venv
+	source venv/bin/activate
+	pip install flask
+	pip install --upgrade pip
+	pip install flask-debugtoolbar
