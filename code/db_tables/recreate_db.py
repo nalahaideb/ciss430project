@@ -17,14 +17,13 @@ from recreate_helper_func import *
 conn = pymysql.connect(user='root', passwd='root')
 c = conn.cursor(pymysql.cursors.DictCursor)
 
-# try:
-c.execute("drop database exdb;")
-#print("successfully dropped database, trying to recreate...")
-c.execute("create database exdb;")
-# except:
-#     print("failure dropping database, continuing...")
-#     c.execute("drop database exdb;")
-#     c.execute("create database exdb;")
+try:
+    c.execute("drop database exdb;")
+    print("successfully dropped database, trying to recreate...")
+    c.execute("create database exdb;")
+except:
+    print("failure dropping database, continuing...")
+    c.execute("create database exdb;")
 c.execute("use exdb;")
 
 #i forget if we're actually giving email to this table or user-credentials
@@ -41,12 +40,13 @@ c.execute("create table friends (buddy INT NOT NULL, chum INT NOT NULL, foreign 
 #we can probably find something smarter to do with the 'friends' and 'messages' table, as they differ only with 'messages' having the 'content' field
 c.execute("create table messages (buddy_from INT NOT NULL, chum_to INT NOT NULL, content VARCHAR(1000), foreign key (buddy_from) references user (uid), foreign key (chum_to) references user (uid))engine=innodb;")
 
-c.execute("create table exercise (eid INT, ename varchar(100), edesc varchar(500), etype varchar(100), ebpart varchar(100), eequip varchar(100), erating varchar(100), primary key (eid))engine=innodb;")
+#there will be a lot of omissions, they did not format this db well
+c.execute("create table exercise (eid INT AUTO_INCREMENT, ename varchar(100), edesc varchar(500), etype varchar(500), ebpart varchar(100), eequip varchar(100), erating varchar(100), primary key (eid))engine=innodb;")
 
 #gonna leave it short at 5 for now, we can expand it later
 #im making these INT instead of VARCHAR like in the UML diag because they should be able to reference 'exercises' for more info on said exercise
 #maybe we can change it back later for simplicity's sake, i see no problems at the moment with it however
-c.execute("create table day (did INT AUTO_INCREMENT, ex1 INT, ex2 INT, ex3 INT, ex4 INT, ex5 INT, primary key (did), foreign key (ex1) references exercise (eid), foreign key (ex2) references exercise (eid), foreign key (ex3) references exercise (eid), foreign key (ex4) references exercise (eid), foreign key (ex5) references exercise (eid));")
+c.execute("create table day (did INT AUTO_INCREMENT, ex1 INT, ex2 INT, ex3 INT, ex4 INT, ex5 INT, primary key (did));")#, foreign key (ex1) references exercise (eid), foreign key (ex2) references exercise (eid), foreign key (ex3) references exercise (eid), foreign key (ex4) references exercise (eid), foreign key (ex5) references exercise (eid)
 
 c.execute("create table schedule (sid INT AUTO_INCREMENT, uid INT NOT NULL, d1 INT, d2 INT, d3 INT, d4 INT, d5 INT, d6 INT, d7 INT, primary key (sid))engine=innodb;")
 
@@ -63,3 +63,9 @@ c.execute("create table progress (pid INT AUTO_INCREMENT, p_gid INT NOT NULL, p_
 
 #input all dat shiiiiiiiii
 create_exercises()
+
+insert_test_users()
+
+insert_premade_days()
+
+insert_test_friends()
