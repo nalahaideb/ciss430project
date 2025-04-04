@@ -28,11 +28,11 @@ c.execute("use exdb;")
 
 #i forget if we're actually giving email to this table or user-credentials
 #also need to add uname to the user table in the UML diag
-c.execute("create table user (uid INT AUTO_INCREMENT, fname VARCHAR(100) NOT NULL, lname VARCHAR(100) NOT NULL, username VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, last_login DATETIME NOT NULL, creation_date DATETIME NOT NULL, primary key (uid))engine=innodb;")
+c.execute("create table user (uid INT AUTO_INCREMENT, fname VARCHAR(100) NOT NULL, lname VARCHAR(100) NOT NULL, username VARCHAR(100) UNIQUE NOT NULL, email VARCHAR(100) UNIQUE NOT NULL, last_login DATETIME NOT NULL, creation_date DATETIME NOT NULL, primary key (uid))engine=innodb;")
 
 #need to update the user-credentials table in the UML diag with the 'uid' ref
 #not gonna include email here, unless we want to have that as a sign in option
-c.execute("create table user_credentials (ucid INT AUTO_INCREMENT, uc_uid INT NOT NULL, uc_username VARCHAR(100) NOT NULL, salt CHAR(32), primary key (ucid), foreign key (uc_uid) references user (uid))engine=innodb;")
+c.execute("create table user_credentials (ucid INT AUTO_INCREMENT, uc_uid INT NOT NULL, uc_username VARCHAR(100) UNIQUE NOT NULL, salt CHAR(32), primary key (ucid), foreign key (uc_uid) references user (uid))engine=innodb;")
 
 #i didnt like having 'user, user1, user2' ala our UML diag in this statement, buddy and chum are interchangeable and are just placeholders atm
 c.execute("create table friends (fid INT AUTO_INCREMENT, buddy INT NOT NULL, chum INT NOT NULL, primary key (fid), foreign key (buddy) references user (uid), foreign key (chum) references user (uid))engine=innodb;")
@@ -64,10 +64,20 @@ c.execute("create table progress (pid INT AUTO_INCREMENT, p_gid INT NOT NULL, p_
 #input all dat shiiiiiiiii
 #create_exercises()
 
-insert_test_users()
+#insert_test_users()
 
 #insert_premade_days()
 
 #insert_test_friends()
 
-insert_premade_schedules()
+#insert_premade_schedules()
+
+#insert_test_plans()
+
+# insert_test_goals()
+
+# insert_test_progress()
+
+# insert_test_credentials()
+
+# insert_test_messages()
