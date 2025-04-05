@@ -1,13 +1,19 @@
+def generate_filters():
+    return
+
 def filter_exercises():
     #join tables according to filters
-
+    
     #return the level of exercise expertise selected
     level = request.form.get('level')
 
     #some kind of loop to get all exercises w/ a certain body part
-    target_muscles = []
+    target_muscles = request.form.getlist('MUSCLE_CHECKBOX')
 
-    #if no entry, do not include rating in query, clear rating if not a number
+    #get equipment selected
+    equipment_list = request.form.getlist('EQUIPMENT_CHECKBOX')
+
+    #if no entry do not include rating in query, clear rating if not a number
     rating = request.form.get('rating')
     if isalpha(rating):
         rating = None
