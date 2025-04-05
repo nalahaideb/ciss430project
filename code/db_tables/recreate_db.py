@@ -62,9 +62,9 @@ c.execute("create table goals (gid INT AUTO_INCREMENT, g_uid INT NOT NULL, goal 
 c.execute("create table progress (pid INT AUTO_INCREMENT, p_gid INT NOT NULL, p_uid INT NOT NULL, primary key (pid), foreign key (p_gid) references goals (gid), foreign key (p_uid) references user (uid))engine=innodb;")
 
 #input all dat shiiiiiiiii
-#create_exercises()
+create_exercises()
 
-#insert_test_users()
+insert_test_users()
 
 #insert_premade_days()
 

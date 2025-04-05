@@ -1,24 +1,14 @@
-<!--dashboard.html-->
+<!--exercise_plan.html-->
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-md-3">
-        <a href="{{ url_for('profile', username=user.username) }}" class="text-decoration-none">
+        <a href="{{ url_for('exercise_list', username=user.username) }}" class="text-decoration-none">
             <div class="card text-white bg-warning mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Profile</h5>
-                    <p class="card-text">View your profile</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('exercise_plan', username = user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Exercise Plans</h5>
-                    <p class="card-text">View/Manage your plans</p>
+                    <h5 class="card-title">Exercises</h5>
+                    <p class="card-text">Browse all available exercises</p>
                 </div>
             </div>
         </a>
@@ -33,17 +23,8 @@
             </div>
         </a>
     </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Friends</h5>
-                    <p class="card-text">Connect with others</p>
-                </div>
-            </div>
-        </a>
-    </div>
 </div>
+<!-- pull entries from the latest iteration of the user plan here -->
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
@@ -78,12 +59,13 @@
             </div>
         </div>
     </div>
+    <!-- USE NUMPY GRAPHING UTIL HERE -->
     <div class="col-md-6">
         <div class="card mb-4">
             <div class="card-header">Progress Toward Goal</div>
             <div class="card-body">
                 <div style="height: 300px; background-color: #eee; display: flex; align-items: center; justify-content: center;">
-                    <em>[Progress Chart Here]</em>
+                    <em>TEST TEST TEST TEST TEST TEST TEST TEST</em>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 # file: routes.py
 from flask import render_template, request, redirect, url_for, session
 from app import app
-
+from site_functions import *
 # NOTES
 # flash messages are possible, but not sure if i want to use them
 # commented out as of now as well as removed html support in base.html
@@ -89,3 +89,26 @@ def edit_profile(username):
         return render_template('edit_profile.html', user=user)
 
     return "User not found", 404
+
+@app.route('/<username>/exercise_plan')
+def exercise_plan(username):
+    if 'user' not in session or session['user'] != username:
+        return redirect(url_for('login'))
+
+    if username == 'test':
+        user = mock_user
+        return render_template('exercise_plan.html', user=user)
+    
+    return "User not found", 404
+
+@app.route('/<username>/exercise_list')
+def exercise_list(username):
+    if 'user' not in session or session['user'] != username:
+        return redirect(url_for('login'))
+
+    if username == 'test':
+        user = mock_user
+        return render_template('exercise_list.html', user=user)
+    
+    return "User not found", 404
+
