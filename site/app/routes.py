@@ -1,7 +1,7 @@
 # file: routes.py
 from flask import render_template, request, redirect, url_for, session
 from app import app
-from site_functions import *
+#from site_functions import *
 # NOTES
 # flash messages are possible, but not sure if i want to use them
 # commented out as of now as well as removed html support in base.html
