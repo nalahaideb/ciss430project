@@ -23,42 +23,30 @@
             </div>
         </a>
     </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Progress</h5>
-                    <p class="card-text">Track your progress</p>
-                </div>
-            </div>
-        </a>
-    </div>
 </div>
-<!-- pull entries from exdb, provide filtering sidebar that updates query-->
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
           <!-- could probably put thumbnails for these as buttons with text instead of tickmarks later on when it all works-->
-          <!-- also should include an "ADD TO PLAN" button next to exercises-->
-          
+          <!-- also should include an "ADD TO PLAN" button next to exercises-->          
           <!-- need to add a function to build this list automatically in site_functions.py-->
           <div class="card-header">Exercises</div>
           <form method="POST">
-            <input type="checkbox">Abdominals</input>
-            <input type="checkbox">Biceps</input>
-            <input type="checkbox">Chest</input>
-            <input type="checkbox">Cardio</input>
-            <input type="checkbox">Back</input>
-            <input type="checkbox">Glutes</input>
-            <input type="checkbox">Triceps</input>
-            <input type="checkbox">Forearms</input>
-            <input type="checkbox">Shoulders</input>
-            <input type="checkbox">Hamstrings</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Abdominals</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Biceps</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Chest</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Cardio</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Back</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Glutes</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Triceps</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Forearms</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Shoulders</input>
+            <input type="checkbox" name='MUSCLE_CHECKBOX'>Hamstrings</input>
             <input type="reset" value="Reset">
             <!-- only allow integer / float types for rating-->
             Rating:<input type="text" id="ratingfield" name="Rating">
-              <input type="button" onclick="alert('NOT IMPLEMENTED')" value="Search">
-              <input type="radio" id="Beginner" name="ex_level" value="BEGINNER">
+              <input type="button" onclick="generate_filters()" value="Search">
+              <input type="radio" id="Beginner" name="ex_level" value="Beginner">
               <label for="Beginner">Beginner</label><br>
               <input type="radio" id="Intermediate" name="ex_level" value="Intermediate">
               <label for="Intermediate">Intermediate</label><br>
