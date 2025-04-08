@@ -1,3 +1,9 @@
+'''
+###########################################################
+########            FRONTEND FUNCTIONS             ########
+###########################################################
+'''
+
 def generate_filters():
     return
 
@@ -45,9 +51,5 @@ def add_exercises():
     ex_bpart = request.form.get('exercise_bpart')
     ex_equip = request.form.get('exercise_equip')
     #get exercise rating and other data from table, return here
-    
-    return
-
-def get_exercises():
     
     return
