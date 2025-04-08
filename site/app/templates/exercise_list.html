@@ -1,6 +1,6 @@
 <!--exercise_list.html-->
 {% extends "base.html" %}
-{% block title %}Exercise Search{% endblock %}
+{% block title %}exercise_list{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-md-3">
@@ -40,30 +40,27 @@
         <div class="card mb-4">
           <!-- could probably put thumbnails for these as buttons with text instead of tickmarks later on when it all works-->
           <!-- also should include an "ADD TO PLAN" button next to exercises-->
-          
           <!-- need to add a function to build this list automatically in site_functions.py-->
           <div class="card-header">Exercises</div>
           <form method="POST">
-            <input type="checkbox">Abdominals</input>
-            <input type="checkbox">Biceps</input>
-            <input type="checkbox">Chest</input>
-            <input type="checkbox">Cardio</input>
-            <input type="checkbox">Back</input>
-            <input type="checkbox">Glutes</input>
-            <input type="checkbox">Triceps</input>
-            <input type="checkbox">Forearms</input>
-            <input type="checkbox">Shoulders</input>
-            <input type="checkbox">Hamstrings</input>
+            <input type="checkbox" name="muscle_group">Abdominals</input>
+            <input type="checkbox" name="muscle_group">Biceps</input>
+            <input type="checkbox" name="muscle_group">Chest</input>
+            <input type="checkbox" name="muscle_group">Cardio</input>
+            <input type="checkbox" name="muscle_group">Back</input>
+            <input type="checkbox" name="muscle_group">Glutes</input>
+            <input type="checkbox" name="muscle_group">Triceps</input>
+            <input type="checkbox" name="muscle_group">Forearms</input>
+            <input type="checkbox" name="muscle_group">Shoulders</input>
+            <input type="checkbox" name="muscle_group">Hamstrings</input>
             <input type="reset" value="Reset">
-            <!-- only allow integer / float types for rating-->
-            Rating:<input type="text" id="ratingfield" name="Rating">
-              <input type="button" onclick="alert('NOT IMPLEMENTED')" value="Search">
-              <input type="radio" id="Beginner" name="ex_level" value="BEGINNER">
-              <label for="Beginner">Beginner</label><br>
-              <input type="radio" id="Intermediate" name="ex_level" value="Intermediate">
-              <label for="Intermediate">Intermediate</label><br>
-              <input type="radio" id="Advanced" name="ex_level" value="Advanced">
-              <label for="Advanced">Advanced</label>
+            <input type="Submit" onclick="alert('NOT IMPLEMENTED')" value="Search">
+            <input type="radio" name="ex_level" value="Beginner">
+            <label for="Beginner">Beginner</label><br>
+            <input type="radio" name="ex_level" value="Intermediate">
+            <label for="Intermediate">Intermediate</label><br>
+            <input type="radio" name="ex_level" value="Advanced">
+            <label for="Advanced">Advanced</label>
             </form>
         </div>
     </div>
