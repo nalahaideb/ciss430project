@@ -9,7 +9,6 @@ def filter_exercises():
 
     #some kind of loop to get all exercises w/ a certain body part
     target_muscles = request.form.getlist('MUSCLE_CHECKBOX')
-
     #get equipment selected
     equipment_list = request.form.getlist('EQUIPMENT_CHECKBOX')
 
