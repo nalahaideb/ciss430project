@@ -2,6 +2,7 @@
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import LoginManager
+from app.user_management.models import User
 
 app = Flask(__name__)
 
