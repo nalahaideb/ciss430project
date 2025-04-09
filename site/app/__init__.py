@@ -13,8 +13,4 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get_by_id(user_id)
-
 from app import routes

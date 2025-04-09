@@ -1,8 +1,9 @@
 # file: models.py
 from flask_login import UserMixin
 from db import get_db_connection
+from app import login_manager
 
-class User(UserMixIn):
+class User(UserMixin):
     def __init__(self, uid, ucid, username, email, salt, fname, lname, bio, creation_date, last_login):
         self.id = uid
         self.ucid = ucid
@@ -21,18 +22,18 @@ class User(UserMixIn):
         try:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                select u.uid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio, uc.creation_date, uc.last_login
-                from User u
-                join User_Credentials uc on u.ucid = uc.ucid
-                where uc.username = %s
+                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio,
+                           uc.creation_date, uc.last_login
+                    FROM User u
+                    JOIN User_Credentials uc ON u.ucid = uc.ucid
+                    WHERE uc.username = %s
                 """, (username,))
                 row = cursor.fetchone()
                 if row:
                     return User(
-                        row['uid'], row['ucid'], row['username'], row['email'],
-                        row['salt'], row['fname'], row['lname'], row['bio'],
-                        row['creation_date'], row['last_login']
-                        )
+                        row['uid'], row['ucid'], row['username'], row['email'], row['salt'],
+                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
+                    )
         finally:
             conn.close()
         return None
@@ -43,21 +44,22 @@ class User(UserMixIn):
         try:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                select u.uid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio, uc.creation_date, uc.last_login
-                from User u
-                join User_Credentials uc on u.ucid = uc.ucid
-                where u.uid = %s
+                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio,
+                           uc.creation_date, uc.last_login
+                    FROM User u
+                    JOIN User_Credentials uc ON u.ucid = uc.ucid
+                    WHERE u.uid = %s
                 """, (uid,))
                 row = cursor.fetchone()
                 if row:
                     return User(
-                        row['uid'], row['ucid'], row['username'], row['email'],
-                        row['salt'], row['fname'], row['lname'], row['bio'],
-                        row['creation_date'], row['last_login']
-                        )
+                        row['uid'], row['ucid'], row['username'], row['email'], row['salt'],
+                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
+                    )
         finally:
             conn.close()
         return None
-    
-    def get_id(self):
-        return self.id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get_by_id(user_id)
