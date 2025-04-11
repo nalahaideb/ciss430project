@@ -1,7 +1,12 @@
 # file: __init__.py
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
-#from flask_login import LoginManager
+<<<<<<< HEAD
+from flask_login import LoginManager
+=======
+from flask_login import LoginManager
+from app.user_management.models import User
+>>>>>>> a6cc48a48fe8ef22525cdbeb0880d20c9c05a79a
 
 app = Flask(__name__)
 
