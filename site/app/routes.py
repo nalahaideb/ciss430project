@@ -101,14 +101,53 @@ def exercise_plan(username):
     
     return "User not found", 404
 
-@app.route('/<username>/exercise_list')
+@app.route('/<username>/exercise_list', methods=['GET', 'POST'])
 def exercise_list(username):
     if 'user' not in session or session['user'] != username:
         return redirect(url_for('login'))
 
+    muscle_groups = None # Initialize muscle groups
+    ex_level = None # Initialize exercise level
+    exercises = None # Initialize exercises
+
     if username == 'test':
         user = mock_user
-        return render_template('exercise_list.html', user=user)
-    
-    return "User not found", 404
+
+        if request.method == 'POST':
+            muscle_groups = request.form.getlist('muscle_group')
+            ex_level = request.form.get('ex_level')
+            #exercises = get_exercises_from_db(muscle_groups, ex_level)
+            print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
+
+        return render_template('exercise_list.html', user=user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+
+    if request.method == 'POST':
+        muscle_groups = request.form.getlist('muscle_group')
+        ex_level = request.form.get('ex_level')
+        exercises = get_exercises_from_db(muscle_groups, ex_level)
+
+    return render_template('exercise_list.html', exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+
+# @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
+# def exercise_list(username):
+#     if 'user' not in session or session['user'] != username:
+#         return redirect(url_for('login'))
+
+#     if username == 'test':
+#         user = mock_user
+#         exercises = None #initialize exercises
+#         if request.method == 'POST':
+#             muscle_groups = request.form.getlist('muscle_group')
+#             ex_level = request.form.get('ex_level')
+#             # print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
+
+#             #exercises = get_exercises_from_db(muscle_groups, ex_level)  # Fetch from DB.
+#         return render_template('exercise_list.html', user=user, exercises=exercises)
+
+#     exercises = None #initialize exercises
+#     if request.method == 'POST':
+#         muscle_groups = request.form.getlist('muscle_group')
+#         ex_level = request.form.get('ex_level')
+#         exercises = get_exercises_from_db(muscle_groups, ex_level) #Fetch from DB.
+#     return render_template('exercise_list.html', exercises=exercises)
 

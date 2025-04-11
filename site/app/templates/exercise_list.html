@@ -1,4 +1,3 @@
-<!--exercise_list.html-->
 {% extends "base.html" %}
 {% block title %}exercise_list{% endblock %}
 {% block content %}
@@ -34,35 +33,61 @@
         </a>
     </div>
 </div>
-<!-- pull entries from exdb, provide filtering sidebar that updates query-->
+
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
-          <!-- could probably put thumbnails for these as buttons with text instead of tickmarks later on when it all works-->
-          <!-- also should include an "ADD TO PLAN" button next to exercises-->
-          <!-- need to add a function to build this list automatically in site_functions.py-->
-          <div class="card-header">Exercises</div>
-          <form method="POST">
-            <input type="checkbox" name="muscle_group">Abdominals</input>
-            <input type="checkbox" name="muscle_group">Biceps</input>
-            <input type="checkbox" name="muscle_group">Chest</input>
-            <input type="checkbox" name="muscle_group">Cardio</input>
-            <input type="checkbox" name="muscle_group">Back</input>
-            <input type="checkbox" name="muscle_group">Glutes</input>
-            <input type="checkbox" name="muscle_group">Triceps</input>
-            <input type="checkbox" name="muscle_group">Forearms</input>
-            <input type="checkbox" name="muscle_group">Shoulders</input>
-            <input type="checkbox" name="muscle_group">Hamstrings</input>
-            <input type="reset" value="Reset">
-            <input type="Submit" onclick="alert('NOT IMPLEMENTED')" value="Search">
-            <input type="radio" name="ex_level" value="Beginner">
-            <label for="Beginner">Beginner</label><br>
-            <input type="radio" name="ex_level" value="Intermediate">
-            <label for="Intermediate">Intermediate</label><br>
-            <input type="radio" name="ex_level" value="Advanced">
-            <label for="Advanced">Advanced</label>
+            <div class="card-header">Exercises</div>
+            <form method="POST">
+                <input type="checkbox" name="muscle_group" value="Abdominals">Abdominals<br>
+                <input type="checkbox" name="muscle_group" value="Biceps">Biceps<br>
+                <input type="checkbox" name="muscle_group" value="Chest">Chest<br>
+                <input type="checkbox" name="muscle_group" value="Cardio">Cardio<br>
+                <input type="checkbox" name="muscle_group" value="Back">Back<br>
+                <input type="checkbox" name="muscle_group" value="Glutes">Glutes<br>
+                <input type="checkbox" name="muscle_group" value="Triceps">Triceps<br>
+                <input type="checkbox" name="muscle_group" value="Forearms">Forearms<br>
+                <input type="checkbox" name="muscle_group" value="Shoulders">Shoulders<br>
+                <input type="checkbox" name="muscle_group" value="Hamstrings">Hamstrings<br>
+                <input type="reset" value="Reset">
+                <input type="submit" value="Search">
+                <br>
+                <input type="radio" name="ex_level" value="Beginner"> Beginner<br>
+                <input type="radio" name="ex_level" value="Intermediate"> Intermediate<br>
+                <input type="radio" name="ex_level" value="Advanced"> Advanced<br>
             </form>
         </div>
+
+        {% if muscle_groups or ex_level %}
+            <div class="card mt-4">
+                <div class="card-header">Selected Filters</div>
+                <div class="card-body">
+                    {% if muscle_groups %}
+                        <p><strong>Muscle Groups:</strong> {{ ', '.join(muscle_groups) }}</p>
+                    {% endif %}
+                    {% if ex_level %}
+                        <p><strong>Exercise Level:</strong> {{ ex_level }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if exercises %}
+            <div class="card mt-4">
+                <div class="card-header">Search Results</div>
+                <div class="card-body">
+                    {% if exercises|length > 0 %}
+                        <ul>
+                            {% for exercise in exercises %}
+                                <li>{{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No exercises found matching your criteria.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

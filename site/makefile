@@ -18,4 +18,5 @@ RETARD_MODE:
 	pip install pandas
 	pip install numpy
 	pip install bcrypt
+	pip install flask-login
 	deactivate
