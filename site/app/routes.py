@@ -1,5 +1,8 @@
 # file: routes.py
-from flask import render_template, request, redirect, url_for, session
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import check_password_hash
+from app.models import User
 from app import app
 #from site_functions import *
 # NOTES
@@ -19,10 +22,9 @@ mock_user = {
 @app.route('/')
 @app.route('/index')
 def index():
-    if 'user' in session:
-        return redirect(url_for('dashboard'))
-    else:
-        return redirect(url_for('login'))
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard', username=current_user.username))
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
