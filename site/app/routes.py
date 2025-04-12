@@ -2,22 +2,11 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from app.models import User
+from app.user_management.models import User
+from app.user_management.util import update_user_profile
 from app import app
 #from site_functions import *
-# NOTES
-# flash messages are possible, but not sure if i want to use them
-# commented out as of now as well as removed html support in base.html
-#
-# logic for login and register are placeholders to get the pages to work
 
-# temp user for placeholder
-mock_user = {
-    'username': 'test',
-    'email': 'test@example.com',
-    'bio': 'Just testing profile system',
-    'goal': 'Build strength and stay fit'
-}
 
 @app.route('/')
 @app.route('/index')
@@ -31,9 +20,13 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username.lower() == 'test' and password == 'pass':
-            session['user'] = username
-            return redirect(url_for('dashboard', username=username))
+
+        user = User.get_by_username(username)
+        if user and check_password_hash(user.phash, password):
+            login_user(user)
+            return redirect(url_for('dashboard', username=user.username))
+        flash('Invalid username or password.')
+        
     return render_template('login.html')
 
 @app.route('/register')
@@ -45,83 +38,79 @@ def register():
     return render_template('register.html')
 
 @app.route('/logout')
+@login_required
 def logout():
-    session.pop('user', None)
+    logout_user()
     return redirect(url_for('login'))
 
 
 # NOTES
 # Individualized dashboard for each user
 @app.route('/<username>/dashboard')
+@login_required
 def dashboard(username):
-    if 'user' not in session or session['user'] != username:
+    if current_user.username != username:
         return redirect(url_for('login'))
-
-    if username == 'test':
-        user = mock_user
-        return render_template('dashboard.html', user=user)
-    
-    return "User not found", 404
+    return render_template('dashboard.html', user=current_user)
 
 
 # NOTES
 # allow for multiple user profiles e.x. /profile/<username>
 # allow edit_profile to access and update user table in database
 @app.route('/<username>/profile')
+@login_required
 def profile(username):
-    if 'user' not in session or session['user'] != username:
+    if current_user.username != username:
         return redirect(url_for('login'))
-
-    if username == 'test':
-        user = mock_user
-        return render_template('profile.html', user=user)
-
-    return "User not found", 404
+    return render_template('profile.html', user=current_user)
 
 @app.route('/<username>/edit_profile', methods=['GET', 'POST'])
+@login_required
 def edit_profile(username):
-    if 'user' not in session or session['user'] != username:
+    if current_user.username != username:
         return redirect(url_for('login'))
 
-    if username == 'test':
-        user = mock_user
-        if request.method == 'POST':
-            # In real setup: update DB, validate form, etc.
-            return redirect(url_for('profile', username=username))
-        return render_template('edit_profile.html', user=user)
+    if request.method == 'POST':
+        fname = request.form.get('fname')
+        lname = request.form.get('lname')
+        email = request.form.get('email')
+        bio = request.form.get('bio')
 
-    return "User not found", 404
+        success = update_user_profile(current_user.id, current_user.ucid, fname, lname, email, bio)
+        if success:
+            flash('Profile updated successfully.')
+        else:
+            flash('An error occurred while updating your profile.')
+            
+        return redirect(url_for('profile', username=username))
+    
+    return render_template('edit_profile.html', user=current_user)
+
 
 @app.route('/<username>/exercise_plan')
+@login_required
 def exercise_plan(username):
-    if 'user' not in session or session['user'] != username:
+    if current_user.username != username:
         return redirect(url_for('login'))
-
-    if username == 'test':
-        user = mock_user
-        return render_template('exercise_plan.html', user=user)
-    
-    return "User not found", 404
+    return render_template('exercise_plan.html', user=current_user)
 
 @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
+@login_required
 def exercise_list(username):
-    if 'user' not in session or session['user'] != username:
+    if current_user.username != username:
         return redirect(url_for('login'))
 
     muscle_groups = None # Initialize muscle groups
     ex_level = None # Initialize exercise level
     exercises = None # Initialize exercises
 
-    if username == 'test':
-        user = mock_user
+    if request.method == 'POST':
+        muscle_groups = request.form.getlist('muscle_group')
+        ex_level = request.form.get('ex_level')
+        #exercises = get_exercises_from_db(muscle_groups, ex_level)
+        print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
 
-        if request.method == 'POST':
-            muscle_groups = request.form.getlist('muscle_group')
-            ex_level = request.form.get('ex_level')
-            #exercises = get_exercises_from_db(muscle_groups, ex_level)
-            print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
-
-        return render_template('exercise_list.html', user=user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+    return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
 
     if request.method == 'POST':
         muscle_groups = request.form.getlist('muscle_group')

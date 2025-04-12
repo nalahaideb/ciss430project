@@ -6,6 +6,6 @@ def get_db_connection():
         host='localhost',
         user='root',
         password='root',
-        database='Exercisedb',
+        database='exercisedb',
         cursorclass=pymysql.cursors.DictCursor
         )
