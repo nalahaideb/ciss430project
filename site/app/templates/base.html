@@ -1,5 +1,4 @@
 <!-- base.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +26,7 @@
     <div class="sidebar">
         <h5 class="mb-4"><a href="{{ url_for('dashboard', username=user.username) }}" class="text-decoration-none text-dark">Dashboard</a></h5>
         <a href="{{ url_for('profile', username=user.username) }}">Profile</a>
-        <a href="{{ url_for('exercise_plan', username = user.username) }}">Exercise Plans</a>
+        <a href="{{ url_for('exercise_plan', username=user.username) }}">Exercise Plans</a>
         <a href="{{ url_for('exercise_list', username=user.username) }}">Exercises</a>
         <a href="#">Progress</a>
         <a href="#">Friends</a>
