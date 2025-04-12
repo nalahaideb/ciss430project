@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
-from app.user_management.util import update_user_profile
+from app.user_management.util import update_user_profile, update_last_login
 from app import app
 #from site_functions import *
 
@@ -23,6 +23,8 @@ def login():
 
         user = User.get_by_username(username)
         if user and check_password_hash(user.phash, password):
+            update_last_login(user.ucid)
+            user = User.get_by_username(user.username)
             login_user(user)
             return redirect(url_for('dashboard', username=user.username))
         flash('Invalid username or password.')
