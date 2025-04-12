@@ -3,31 +3,31 @@
 {% block title %}Profile{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">Profile Information</div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="goal">Fitness Goal</label>
-                        <input type="text" id="goal" name="goal" class="form-control" value="{{ user.goal }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" class="form-control" rows="3">{{ user.bio }}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </form>
-            </div>
-        </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">Profile Information</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="form-group">
+            <label for="fname">First Name</label>
+            <input type="text" id="fname" name="fname" class="form-control" value="{{ user.fname }}">
+          </div>
+          <div class="form-group">
+            <label for="lname">Last Name</label>
+            <input type="text" id="lname" name="lname" class="form-control" value="{{ user.lname }}">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
+          </div>
+          <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" class="form-control" rows="3">{{ user.bio }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

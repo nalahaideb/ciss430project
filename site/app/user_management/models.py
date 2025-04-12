@@ -1,15 +1,15 @@
 # file: models.py
 from flask_login import UserMixin
-from db import get_db_connection
 from app import login_manager
+from app.db import get_db_connection
 
 class User(UserMixin):
-    def __init__(self, uid, ucid, username, email, salt, fname, lname, bio, creation_date, last_login):
+    def __init__(self, uid, ucid, username, email, phash, fname, lname, bio, creation_date, last_login):
         self.id = uid
         self.ucid = ucid
         self.username = username
         self.email = email
-        self.salt = salt
+        self.phash = phash
         self.fname = fname
         self.lname = lname
         self.bio = bio
@@ -22,7 +22,7 @@ class User(UserMixin):
         try:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio,
+                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.phash, u.fname, u.lname, u.bio,
                            uc.creation_date, uc.last_login
                     FROM User u
                     JOIN User_Credentials uc ON u.ucid = uc.ucid
@@ -31,7 +31,7 @@ class User(UserMixin):
                 row = cursor.fetchone()
                 if row:
                     return User(
-                        row['uid'], row['ucid'], row['username'], row['email'], row['salt'],
+                        row['uid'], row['ucid'], row['username'], row['email'], row['phash'],
                         row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
                     )
         finally:
@@ -44,7 +44,7 @@ class User(UserMixin):
         try:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.salt, u.fname, u.lname, u.bio,
+                    SELECT u.uid, u.ucid, uc.username, uc.email, uc.phash, u.fname, u.lname, u.bio,
                            uc.creation_date, uc.last_login
                     FROM User u
                     JOIN User_Credentials uc ON u.ucid = uc.ucid
@@ -53,7 +53,7 @@ class User(UserMixin):
                 row = cursor.fetchone()
                 if row:
                     return User(
-                        row['uid'], row['ucid'], row['username'], row['email'], row['salt'],
+                        row['uid'], row['ucid'], row['username'], row['email'], row['phash'],
                         row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
                     )
         finally:

@@ -1,6 +1,6 @@
-<!-- profile.html -->
 {% extends "base.html" %}
 {% block title %}Profile{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
@@ -11,11 +11,13 @@
                         <i class="fas fa-user"></i>
                     </div>
                 </div>
-                <h4 class="card-title">John Doe</h4>
-                <p class="card-text">johndoe@example.com</p>
-                <p><strong>Goal:</strong> Lose weight and build muscle</p>
-                <p><strong>Bio:</strong> Just a regular person working on fitness goals.</p>
-                <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary mt-2">Edit Profile</a>
+                <h4 class="card-title">{{ user.fname }} {{ user.lname }}</h4>
+                <p class="card-text">{{ user.email }}</p>
+                <p><strong>Bio:</strong> {{ user.bio }}</p>
+
+                {% if current_user.username == user.username %}
+                    <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary mt-2">Edit Profile</a>
+                {% endif %}
             </div>
         </div>
     </div>
