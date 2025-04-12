@@ -62,3 +62,12 @@ values (
 (select ucid from User_Credentials where username = 'test'),
 'testfname', 'testlname', 'test bio'
 );
+
+insert into User_Credentials(username, email, phash)
+values ('test2', 'test2@example.com', 'scrypt:32768:8:1$cPRqTQ9ZEEvxlrNQ$4f210848058e3c13b719b8cd64f3019c7c802c0c5a3707291d3ffa8f421855525740fdd59d512e4b4b1f0ec21d57146c444c6246a2cd117a5e77ce7ec18ad49b');
+
+insert into User (ucid, fname, lname, bio)
+values (
+(select ucid from User_Credentials where username = 'test2'),
+'test2fname', 'test2lname', 'test2 bio'
+);

@@ -43,9 +43,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
-# NOTES
-# Individualized dashboard for each user
 @app.route('/<username>/dashboard')
 @login_required
 def dashboard(username):
@@ -53,16 +50,13 @@ def dashboard(username):
         return redirect(url_for('login'))
     return render_template('dashboard.html', user=current_user)
 
-
-# NOTES
-# allow for multiple user profiles e.x. /profile/<username>
-# allow edit_profile to access and update user table in database
 @app.route('/<username>/profile')
 @login_required
 def profile(username):
-    if current_user.username != username:
-        return redirect(url_for('login'))
-    return render_template('profile.html', user=current_user)
+    user = User.get_by_username(username)
+    if not user:
+        return "User not found, 404"
+    return render_template('profile.html', user=user)
 
 @app.route('/<username>/edit_profile', methods=['GET', 'POST'])
 @login_required
