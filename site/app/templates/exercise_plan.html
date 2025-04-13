@@ -1,17 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Exercise Plans{% endblock %}
 {% block content %}
-    <h1>Exercise Plans for {{ username }}</h1>
+<p>{{ now.strftime('%A, %B %d, %Y %I:%M:%S %p %Z%z') }}</p>
+<div style="display: flex;">
+    <div style="flex: 2; margin-right: 20px;">
+        <h1>Exercise Plans for {{ username }}</h1>
 
-    <form method="POST">
-        <ul>
-            {% for exercise in exercises %}
-                <li>
-                    <input type="checkbox" name="selected_exercises" value="{{ exercise.id }}">
-                    {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})
-                </li>
-            {% endfor %}
-        </ul>
-        <button type="submit">Add to Plan</button>
-    </form>
+        <form method="POST">
+            <ul>
+                {% for exercise in exercises %}
+                <li>
+                    <input type="checkbox" name="selected_exercises" value="{{ exercise.id }}">
+                    {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})
+                </li>
+                {% endfor %}
+            </ul>
+            <button type="submit">Add to Plan</button>
+        </form>
+    </div>
+
+    <div style="flex: 1;">
+        <h2>Search for Plans</h2>
+        <div style="display: flex;">
+            <input type="text" id="planSearch" placeholder="Enter plan name">
+            <button id="searchButton">Search</button>
+        </div>
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Plan Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Plan A</td></tr>
+                <tr><td>Plan B</td></tr>
+                <tr><td>Plan C</td></tr>
+                <tr><td>Plan D</td></tr>
+                <tr><td>Plan E</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
