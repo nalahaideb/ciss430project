@@ -19,4 +19,5 @@ RETARD_MODE:
 	pip install numpy
 	pip install bcrypt
 	pip install flask-login
+	pip install pytz
 	deactivate
