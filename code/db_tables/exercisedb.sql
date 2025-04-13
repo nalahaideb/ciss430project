@@ -44,14 +44,53 @@ foreign key (receiver_id) references User(uid) on delete CASCADE
 
 create table Exercises (
 eid INT AUTO_INCREMENT,
-ename VARCHAR(100),
-edesc VARCHAR(500),
-etype VARCHAR(500),
-ebpart VARCHAR(100),
+ename VARCHAR(100) not NULL,
+etype ENUM('Strength', 'Cardio', 'Stretching', 'Plyometrics',
+'Strongman', 'Olympic Weightlifting') not NULL,
+ebpart ENUM('Abdominals', 'Biceps', 'Chest', 'Cardio', 'Back',
+'Glutes', 'Triceps', 'Forearms', 'Shoulders', 'Hamstrings') not NULL,
 eequip VARCHAR(100),
-erating VARCHAR(100),
 primary key (eid)
 )engine=innodb;
+
+create table Exercise_Plan (
+pid INT AUTO_INCREMENT,
+uid INT not NULL,
+plan_name VARCHAR(100) not NULL,
+description TEXT,
+creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+primary key (pid),
+foreign key (uid) references User(uid) on delete CASCADE
+)engine=innodb;
+
+create table Exercise_Plan_Day (
+did INT AUTO_INCREMENT,
+pid INT not NULL,
+day_name VARCHAR(50) not NULL,
+day_order INT,
+primary key (did),
+foreign key (pid) references Exercise_Plan(pid) on delete CASCADE
+)engine=innodb;
+
+create table Exercise_Entry (
+entry_id INT AUTO_INCREMENT,
+did INT not NULL,
+eid INT not NULL,
+exercise_order INT,
+sets INT,
+reps INT,
+duration INT,
+notes TEXT,
+primary key (entry_id),
+foreign key (did) references Exercise_Plan_Day(did) on delete CASCADE,
+foreign key (eid) references Exercises(eid)
+)engine=innodb;
+
+
+alter table User
+add column main_pid INT,
+add foreign key (main_pid) references Exercise_Plan(pid) on delete set NULL;
+
 
 -- test user creation
 insert into User_Credentials(username, email, phash)
