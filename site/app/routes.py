@@ -5,9 +5,8 @@ from werkzeug.security import check_password_hash
 from app.user_management.models import User
 from app.user_management.util import update_user_profile, update_last_login
 from app import app
-#from site_functions import *
-
-
+from datetime import datetime
+import pytz
 @app.route('/')
 @app.route('/index')
 def index():
@@ -82,13 +81,23 @@ def edit_profile(username):
     
     return render_template('edit_profile.html', user=current_user)
 
-
 @app.route('/<username>/exercise_plan')
 @login_required
 def exercise_plan(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    return render_template('exercise_plan.html', user=current_user)
+
+    now_utc = datetime.now(pytz.utc)
+    central_timezone = pytz.timezone('America/Chicago')
+    now_local = now_utc.astimezone(central_timezone)
+
+    #dummy data for now
+    exercises = [
+        {'id': 1, 'name': 'Push-ups', 'level': 'Beginner', 'muscle_group': 'Chest'},
+        {'id': 2, 'name': 'Squats', 'level': 'Beginner', 'muscle_group': 'Legs'},
+    ]
+
+    return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, exercises=exercises)
 
 @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
 @login_required
@@ -115,26 +124,15 @@ def exercise_list(username):
 
     return render_template('exercise_list.html', exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
 
-# @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
-# def exercise_list(username):
-#     if 'user' not in session or session['user'] != username:
-#         return redirect(url_for('login'))
 
-#     if username == 'test':
-#         user = mock_user
-#         exercises = None #initialize exercises
-#         if request.method == 'POST':
-#             muscle_groups = request.form.getlist('muscle_group')
-#             ex_level = request.form.get('ex_level')
-#             # print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
-
-#             #exercises = get_exercises_from_db(muscle_groups, ex_level)  # Fetch from DB.
-#         return render_template('exercise_list.html', user=user, exercises=exercises)
-
-#     exercises = None #initialize exercises
-#     if request.method == 'POST':
-#         muscle_groups = request.form.getlist('muscle_group')
-#         ex_level = request.form.get('ex_level')
-#         exercises = get_exercises_from_db(muscle_groups, ex_level) #Fetch from DB.
-#     return render_template('exercise_list.html', exercises=exercises)
-
+@app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
+@login_required
+def view_function():
+    username = "example_user" 
+    exercises = [
+        {'id': 1, 'name': 'Exercise A', 'level': 'Beginner', 'muscle_group': 'Group X'}
+    ]
+    now_utc = datetime.now(pytz.utc)
+    current_timezone = pytz.timezone('America/Chicago')
+    now_local = now_utc.astimezone(current_timezone)
+    return render_template('exercise_plan.html', username=username, exercises=exercises, now=now_local)

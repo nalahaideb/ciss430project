@@ -1,74 +1,44 @@
-<!--exercise_plan.html-->
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Exercise Plans{% endblock %}
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <a href="{{ url_for('exercise_list', username=user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Exercises</h5>
-                    <p class="card-text">Browse all available exercises</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Progress</h5>
-                    <p class="card-text">Track your progress</p>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
-<!-- pull entries from the latest iteration of the user plan here -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">Today's Exercises</div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Exercise</th>
-                            <th>Sets</th>
-                            <th>Reps</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Push-ups</td>
-                            <td>3</td>
-                            <td>12</td>
-                        </tr>
-                        <tr>
-                            <td>Squats</td>
-                            <td>4</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Plank</td>
-                            <td>3</td>
-                            <td>60s</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <!-- USE NUMPY GRAPHING UTIL HERE -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">Progress Toward Goal</div>
-            <div class="card-body">
-                <div style="height: 300px; background-color: #eee; display: flex; align-items: center; justify-content: center;">
-                    <em>TEST TEST TEST TEST TEST TEST TEST TEST</em>
-                </div>
-            </div>
-        </div>
-    </div>
+<p>{{ now.strftime('%A, %B %d, %Y %I:%M:%S %p %Z%z') }}</p>
+<div style="display: flex;">
+    <div style="flex: 2; margin-right: 20px;">
+        <h1>Exercise Plans for {{ username }}</h1>
+
+        <form method="POST">
+            <ul>
+                {% for exercise in exercises %}
+                <li>
+                    <input type="checkbox" name="selected_exercises" value="{{ exercise.id }}">
+                    {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})
+                </li>
+                {% endfor %}
+            </ul>
+            <button type="submit">Add to Plan</button>
+        </form>
+    </div>
+
+    <div style="flex: 1;">
+        <h2>Search for Plans</h2>
+        <div style="display: flex;">
+            <input type="text" id="planSearch" placeholder="Enter plan name">
+            <button id="searchButton">Search</button>
+        </div>
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Plan Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Plan A</td></tr>
+                <tr><td>Plan B</td></tr>
+                <tr><td>Plan C</td></tr>
+                <tr><td>Plan D</td></tr>
+                <tr><td>Plan E</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
