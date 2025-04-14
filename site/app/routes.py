@@ -1,9 +1,9 @@
 # file: routes.py
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
-from app.user_management.util import update_user_profile, update_last_login, get_friends, get_mutual_users, search_users
+from app.user_management.util import update_user_profile, update_last_login, get_friends, get_mutual_users, search_users, get_friend_requests, send_friend_request, approve_friend_request, reject_friend_request, remove_friend, is_friends
 from app import app
 from datetime import datetime
 import pytz
@@ -43,6 +43,7 @@ def register():
 @login_required
 def logout():
     logout_user()
+    session.pop('_flashes', None)
     return redirect(url_for('login'))
 
 @app.route('/<username>/dashboard')
@@ -57,8 +58,24 @@ def dashboard(username):
 def profile(username):
     user = User.get_by_username(username)
     if not user:
-        return "User not found, 404"
-    return render_template('profile.html', user=user)
+        return "User not found", 404
+
+    is_own_profile = current_user.username == username
+    show_add_friend = not is_own_profile
+
+    # Check if they're already friends
+    user.is_friend = is_friends(current_user.id, user.id) if show_add_friend else False
+
+    pending_requests = []
+    if is_own_profile:
+        pending_requests = get_friend_requests(current_user.id, limit=6)
+
+    return render_template(
+        'profile.html',
+        user=user,
+        show_add_friend=show_add_friend,
+        pending_requests=pending_requests
+    )
 
 @app.route('/<username>/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -122,6 +139,59 @@ def friends(username):
         has_more_friends=has_more_friends,
         has_more_users=has_more_users
     )
+
+@app.route('/add_friend/<int:uid>', methods=['POST'])
+@login_required
+def add_friend(uid):
+    if uid == current_user.id:
+        flash("You cannot add yourself.")
+        return redirect(request.referrer or url_for('dashboard', username=current_user.username))
+
+    result = send_friend_request(current_user.id, uid)
+    if result == "already_friends":
+        flash("You are already friends.")
+    elif result == "already_requested":
+        flash("Friend request already sent.")
+    elif result == "success":
+        flash("Friend request sent.")
+    else:
+        flash("Failed to send friend request.")
+
+    return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+@app.route('/approve_friend/<int:frid>', methods=['POST'])
+@login_required
+def approve_friend(frid):
+    result = approve_friend_request(frid, current_user.id)
+    if result == "success":
+        flash("Friend request approved.")
+    elif result == "invalid_request":
+        flash("Invalid or expired friend request.")
+    else:
+        flash("Failed to approve friend.")
+    return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+@app.route('/reject_friend/<int:frid>', methods=['POST'])
+@login_required
+def reject_friend(frid):
+    result = reject_friend_request(frid, current_user.id)
+    if result == "success":
+        flash("Friend request rejected.")
+    else:
+        flash("Failed to reject friend request.")
+    return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+@app.route('/remove_friend/<int:uid>', methods=['POST'])
+@login_required
+def remove_friend_route(uid):
+    success = remove_friend(current_user.id, uid)
+    if success:
+        flash("Friend removed.")
+    else:
+        flash("Failed to remove friend.")
+    return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+
 
 @app.route('/<username>/exercise_plan')
 @login_required
