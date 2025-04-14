@@ -1,0 +1,108 @@
+<!-- friends.html -->
+{% extends "base.html" %}
+{% block title %}Friends{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Friends</h2>
+
+<form method="POST" class="mb-4">
+    <input type="text" name="search" id="friendSearch" class="form-control" placeholder="Search for friends or users...">
+</form>
+
+<div class="row">
+    <!-- Friends Column -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Your Friends</div>
+            <div class="card-body">
+                <ul class="list-group" id="friendsList">
+                    {% if friends %}
+                        {% for friend in friends %}
+                            <a href="{{ url_for('profile', username=friend.username) }}" class="list-group-item list-group-item-action friend-item text-dark">
+                                <strong>{{ friend.username }}</strong><br>
+                                <small>{{ friend.fname }} {{ friend.lname }}</small>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item text-muted">You have no friends yet.</li>
+                    {% endif %}
+                </ul>
+
+                <!-- Pagination -->
+                <nav class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if page_friends > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('friends', username=user.username, page_friends=page_friends-1, page_users=page_users) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled"><span class="page-link">Page {{ page_friends }}</span></li>
+                        {% if has_more_friends %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('friends', username=user.username, page_friends=page_friends+1, page_users=page_users) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Column -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                {% if request.form.get('search') %}
+                    Search Results
+                {% else %}
+                    Suggested Users (Mutual Friends)
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <ul class="list-group" id="usersList">
+                    {% if users %}
+                        {% for user in users %}
+                            <a href="{{ url_for('profile', username=user.username) }}" class="list-group-item list-group-item-action user-item text-dark">
+                                <strong>{{ user.username }}</strong><br>
+                                <small>{{ user.fname }} {{ user.lname }}</small>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item text-muted">No users found.</li>
+                    {% endif %}
+                </ul>
+
+                <!-- Pagination -->
+                <nav class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if page_users > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('friends', username=user.username, page_users=page_users-1, page_friends=page_friends) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled"><span class="page-link">Page {{ page_users }}</span></li>
+                        {% if has_more_users %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('friends', username=user.username, page_users=page_users+1, page_friends=page_friends) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('friendSearch').addEventListener('input', function () {
+    const query = this.value.toLowerCase();
+    const filterList = (selector, className) => {
+        document.querySelectorAll(selector + ' .' + className).forEach(el => {
+            el.style.display = el.textContent.toLowerCase().includes(query) ? '' : 'none';
+        });
+    };
+    filterList('#friendsList', 'friend-item');
+    filterList('#usersList', 'user-item');
+});
+</script>
+{% endblock %}

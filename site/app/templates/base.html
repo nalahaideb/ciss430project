@@ -30,7 +30,7 @@
         <a href="{{ url_for('exercise_plan', username=current_user.username) }}">Exercise Plans</a>
         <a href="{{ url_for('exercise_list', username=current_user.username) }}">Exercises</a>
         <a href="#">Progress</a>
-        <a href="#">Friends</a>
+        <a href="{{ url_for('friends', username=current_user.username) }}">Friends</a>
         <a href="{{ url_for('logout') }}" class="text-danger">Logout</a>
     </div>
     {% endif %}

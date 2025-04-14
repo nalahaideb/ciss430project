@@ -31,6 +31,16 @@ foreign key (user1) references User(uid) on delete CASCADE,
 foreign key (user2) references User(uid) on delete CASCADE
 )engine=innodb;
 
+create table Friend_Requests (
+frid INT AUTO_INCREMENT,
+sender_id INT not NULL,
+receiver_id INT not NULL,
+request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+primary key (frid),
+foreign key (sender_id) references User(uid) on delete CASCADE,
+foreign key (receiver_id) references User(uid) on delete CASCADE
+)engine=innodb;
+
 create table Messages (
 mid INT AUTO_INCREMENT,
 sender_id INT not NULL,
