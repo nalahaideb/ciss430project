@@ -3,10 +3,11 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
-from app.user_management.util import update_user_profile, update_last_login
+from app.user_management.util import update_user_profile, update_last_login, get_friends, get_mutual_users, search_users
 from app import app
 from datetime import datetime
 import pytz
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -80,6 +81,47 @@ def edit_profile(username):
         return redirect(url_for('profile', username=username))
     
     return render_template('edit_profile.html', user=current_user)
+
+@app.route('/<username>/friends', methods=['GET', 'POST'])
+@login_required
+def friends(username):
+    if current_user.username != username:
+        return redirect(url_for('login'))
+
+    uid = current_user.id
+    search_query = request.form.get('search') if request.method == 'POST' else request.args.get('search', '')
+
+    LIMIT = 10
+    page_friends = int(request.args.get('page_friends', 1))
+    page_users = int(request.args.get('page_users', 1))
+
+    offset_friends = (page_friends - 1) * LIMIT
+    offset_users = (page_users - 1) * LIMIT
+
+    # Friends list
+    friends = get_friends(uid, limit=LIMIT + 1, offset=offset_friends)
+    has_more_friends = len(friends) > LIMIT
+    friends = friends[:LIMIT]
+
+    # Users list
+    if search_query:
+        users = search_users(search_query, exclude_uid=uid, limit=LIMIT + 1, offset=offset_users)
+    else:
+        users = get_mutual_users(uid, limit=LIMIT + 1, offset=offset_users)
+
+    has_more_users = len(users) > LIMIT
+    users = users[:LIMIT]
+
+    return render_template(
+        'friends.html',
+        user=current_user,
+        friends=friends,
+        users=users,
+        page_friends=page_friends,
+        page_users=page_users,
+        has_more_friends=has_more_friends,
+        has_more_users=has_more_users
+    )
 
 @app.route('/<username>/exercise_plan')
 @login_required

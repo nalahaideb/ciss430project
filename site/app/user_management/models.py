@@ -4,7 +4,7 @@ from app import login_manager
 from app.db import get_db_connection
 
 class User(UserMixin):
-    def __init__(self, uid, ucid, username, email, phash, fname, lname, bio, creation_date, last_login):
+    def __init__(self, uid, ucid, username, email, phash, fname, lname, bio, creation_date, last_login, main_pid):
         self.id = uid
         self.ucid = ucid
         self.username = username
@@ -15,6 +15,7 @@ class User(UserMixin):
         self.bio = bio
         self.creation_date = creation_date
         self.last_login = last_login
+        self.main_pid = main_pid
 
     @staticmethod
     def get_by_username(username):
@@ -23,7 +24,7 @@ class User(UserMixin):
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT u.uid, u.ucid, uc.username, uc.email, uc.phash, u.fname, u.lname, u.bio,
-                           uc.creation_date, uc.last_login
+                           uc.creation_date, uc.last_login, u.main_pid
                     FROM User u
                     JOIN User_Credentials uc ON u.ucid = uc.ucid
                     WHERE uc.username = %s
@@ -32,7 +33,7 @@ class User(UserMixin):
                 if row:
                     return User(
                         row['uid'], row['ucid'], row['username'], row['email'], row['phash'],
-                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
+                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login'], row['main_pid']
                     )
         finally:
             conn.close()
@@ -45,7 +46,7 @@ class User(UserMixin):
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT u.uid, u.ucid, uc.username, uc.email, uc.phash, u.fname, u.lname, u.bio,
-                           uc.creation_date, uc.last_login
+                           uc.creation_date, uc.last_login, u.main_pid
                     FROM User u
                     JOIN User_Credentials uc ON u.ucid = uc.ucid
                     WHERE u.uid = %s
@@ -54,7 +55,7 @@ class User(UserMixin):
                 if row:
                     return User(
                         row['uid'], row['ucid'], row['username'], row['email'], row['phash'],
-                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login']
+                        row['fname'], row['lname'], row['bio'], row['creation_date'], row['last_login'], row['main_pid']
                     )
         finally:
             conn.close()
