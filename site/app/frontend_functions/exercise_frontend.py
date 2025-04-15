@@ -1,6 +1,12 @@
-
 def generate_filters():
-    
+    conn = pymysql.connect(
+        host='localhost',
+        user='root',
+        password='root',
+        database='exercisedb',
+        cursorclass=pymysql.cursors.DictCursor
+        )
+    cursor = conn.cursor()
     return
 
 def filter_exercises():
