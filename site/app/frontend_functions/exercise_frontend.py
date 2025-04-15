@@ -1,3 +1,4 @@
+import pymysql
 def generate_filters():
     conn = pymysql.connect(
         host='localhost',
@@ -7,7 +8,16 @@ def generate_filters():
         cursorclass=pymysql.cursors.DictCursor
         )
     cursor = conn.cursor()
-    return
+    bodyparts = []
+    equipment = []
+    ex_type = []
+    cursor.execute("select distinct ebpart from Exercises;")
+    bodyparts = cursor.fetchall()
+    cursor.execute("select distinct eequip from Exercises;")
+    equipment = cursor.fetchall()
+    cursor.execute("select distinct etype from Exercises;")
+    ex_type = cursor.fetchall()
+    return bodyparts, equipment, ex_type
 
 def filter_exercises():
     #join tables according to filters

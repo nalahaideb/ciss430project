@@ -54,9 +54,9 @@ def sendgmail(to_=TO,
         raise Exception("[%s] ERROR: Please report error" % NOW)
 if __name__ == '__main__':
     NOW = datetime.datetime.now()
-    sendgmail(to_=[GMAIL],
-              subject='this is a test %s' % NOW,
-              text='this is a test',
-              html='<html><body><h1>This is a test</h1>This is a test</body></html>',
-              attach=['myemail.py']
-)
+    # sendgmail(to_=[GMAIL],
+    #           subject='this is a test %s' % NOW,
+    #           text='this is a test',
+    #           html='<html><body><h1> %s </h1> %s</body></html>' %,
+    #           attach=['myemail.py']
+
