@@ -217,9 +217,9 @@ def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
 
-    muscle_groups = None # Initialize muscle groups
-    ex_level = None # Initialize exercise level
-    exercises = None # Initialize exercises
+    muscle_groups = None
+    ex_level = None 
+    exercises = None 
 
     if request.method == 'POST':
         muscle_groups = request.form.getlist('muscle_group')
