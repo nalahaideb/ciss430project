@@ -1,10 +1,13 @@
 import os
 import pymysql
 import random
-conn = pymysql.connect(user='root', passwd='root')
-c = conn.cursor(pymysql.cursors.DictCursor)
-c.execute('use exdb;')
-
+try:
+    os.system("mysql --user=root --password=root < exercisedb.sql")    
+    conn = pymysql.connect(user='root', passwd='root')
+    c = conn.cursor(pymysql.cursors.DictCursor)
+    c.execute('use exercisedb;')
+except Exception as e:
+    print("ERROR", e)
 def cleanup(x, islist=False):
     x = x.replace('\n', '')
     x = x.replace('"', '')
@@ -32,12 +35,13 @@ def create_exercises():
             c.execute("start transaction;")
             #enter the following values of entry deliniated by commas: 1, n-5, n-4, n-3, n-2, n-1, n
             entry_len = len(entry)
-            c.execute("insert into exercise (ename, edesc, etype, ebpart, eequip, erating) values ('" + entry[1] + "', '" + entry[2] + "', '" + entry[entry_len - 6] + "', '" + entry[entry_len - 5] + "', '" + entry[entry_len - 4] + "', '" + entry[entry_len - 3] + "');")
-
+            #old insert
+            c.execute("insert into Exercises (ename, etype, ebpart, eequip) values ('" + entry[1] + "', '"  + entry[entry_len - 6] + "', '" + entry[entry_len - 5] + "', '" + entry[entry_len - 4] + "');")
+            #print("INSERTED", entry)
             c.execute("commit;")
         except Exception as e:
             print(e)
-            print("ENTRY FAILED,", entry[1:])
+            print("ENTRY FAILED,", entry[1:], "!!!",entry_len,"!!!")
     return
 
 def insert_test_users():

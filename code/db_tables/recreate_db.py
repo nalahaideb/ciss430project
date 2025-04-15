@@ -64,7 +64,7 @@ c.execute("create table progress (pid INT AUTO_INCREMENT, p_gid INT NOT NULL, p_
 #input all dat shiiiiiiiii
 create_exercises()
 
-insert_test_users()
+#insert_test_users()
 
 #insert_premade_days()
 
