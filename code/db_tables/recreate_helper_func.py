@@ -19,13 +19,9 @@ def cleanup(x, islist=False):
 #later ill have to add parameters to reference which connection is being opened by the cursor, "HOST, PORT, USER, PASS" etc
 def create_exercises():
 #Title,Desc,Type,BodyPart,Equipment,Level,Rating,RatingDesc
-    #all values are varchar, null values are replaced with a "N/A"
+#all values are varchar, null values are replaced with a "N/A"
     f = open("/home/student/Desktop/ciss430/project/data/megaGymDataset.csv")
     f.readline()
-    # try:
-    #     # c.execute("create table exercise (eid INT, ename varchar(100), edesc varchar(500), etype varchar(100), ebpart varchar(100), eequip varchar(100), erating varchar(100), primary key (id))engine=innodb;")
-    # except:
-    #     print("table made, continuing...")
     for e in f:
         exercise = e.split(',')
         entry = []
@@ -34,7 +30,10 @@ def create_exercises():
             #dataset was made by actual honest to god fucking retards so there will be exclusions because there are commas in both the desc and title, no way to tell how many commas exist before the 'bodypart' field appears.
         try:
             c.execute("start transaction;")
-            c.execute("insert into exercise (ename, edesc, etype, ebpart, eequip, erating) values ('" + entry[1] + "', '" + entry[2] + "', '" + entry[3] + "', '" + entry[4] + "', '" + entry[5] + "', '" + entry[6] + "');")
+            #enter the following values of entry deliniated by commas: 1, n-5, n-4, n-3, n-2, n-1, n
+            entry_len = len(entry)
+            c.execute("insert into exercise (ename, edesc, etype, ebpart, eequip, erating) values ('" + entry[1] + "', '" + entry[2] + "', '" + entry[entry_len - 6] + "', '" + entry[entry_len - 5] + "', '" + entry[entry_len - 4] + "', '" + entry[entry_len - 3] + "');")
+
             c.execute("commit;")
         except Exception as e:
             print(e)
