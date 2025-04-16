@@ -191,8 +191,6 @@ def remove_friend_route(uid):
         flash("Failed to remove friend.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
 
-
-
 @app.route('/<username>/exercise_plan')
 @login_required
 def exercise_plan(username):
@@ -208,7 +206,6 @@ def exercise_plan(username):
         {'id': 1, 'name': 'Push-ups', 'level': 'Beginner', 'muscle_group': 'Chest'},
         {'id': 2, 'name': 'Squats', 'level': 'Beginner', 'muscle_group': 'Legs'},
     ]
-
     return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, exercises=exercises)
 
 @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
@@ -216,27 +213,19 @@ def exercise_plan(username):
 def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-
-    muscle_groups = None
-    ex_level = None 
-    exercises = None 
-
+    
+    muscle_groups = []
+    ex_level = []
+    exercises = [] 
     if request.method == 'POST':
         muscle_groups = request.form.getlist('muscle_group')
         ex_level = request.form.get('ex_level')
-        #exercises = get_exercises_from_db(muscle_groups, ex_level)
-        print("PRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINTPRINT", muscle_groups)
-
-    return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
-
-    if request.method == 'POST':
-        muscle_groups = request.form.getlist('muscle_group')
-        ex_level = request.form.get('ex_level')
+        equipment = request.form.get('equipment')
+        #ex_name = request.form.get('search_field')
         exercises = get_exercises_from_db(muscle_groups, ex_level)
-
-    return render_template('exercise_list.html', exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
-
-
+    #if request.method == 'GET':
+    return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+        
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
 def view_function():
