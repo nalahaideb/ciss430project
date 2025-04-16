@@ -7,7 +7,6 @@ from app.user_management.util import update_user_profile, update_last_login, get
 from app import app
 from datetime import datetime
 import pytz
-
 @app.route('/')
 @app.route('/index')
 def index():
@@ -223,13 +222,14 @@ def exercise_list(username):
         equipment = request.form.get('equipment')
         #ex_name = request.form.get('search_field')
         exercises = get_exercises_from_db(muscle_groups, ex_level)
-    #if request.method == 'GET':
+    #if request.method == 'GET':2
     return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
         
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
-def view_function():
-    username = "example_user" 
+def view_function(username):
+    if current_user.username != username:
+        return redirect(url_for('login'))
     exercises = [
         {'id': 1, 'name': 'Exercise A', 'level': 'Beginner', 'muscle_group': 'Group X'}
     ]
@@ -237,3 +237,40 @@ def view_function():
     current_timezone = pytz.timezone('America/Chicago')
     now_local = now_utc.astimezone(current_timezone)
     return render_template('exercise_plan.html', username=username, exercises=exercises, now=now_local)
+
+#should probably have this confirm the user is registered before we enable them to log on to anything else
+@app.route('/verify', methods=['POST'])
+def verify_user():
+    user = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    print("USER INFO =", user, email, password)
+    # basic input validation
+    if not user or not email or not password:
+        return "Error: Please fill in all fields.", 400
+
+    # check if the username or email already exists in the database
+    # existing_user = User.query.filter_by(username=username).first()
+    # existing_email = User.query.filter_by(email=email).first()
+    existing_user = None  
+    existing_email = None 
+
+    # if existing_user:
+    #     return "Error: Username already exists.", 409
+    # if existing_email:
+    #     return "Error: Email already exists.", 409
+
+    #hashed_password = generate_password_hash(password)
+
+    # At this point, the data is valid and the user doesn't exist.
+    # You would typically save this user data to your database here.
+    # new_user = User(username=username, email=email, password_hash=hashed_password)
+    # db.session.add(new_user)
+    # db.session.commit()
+    valid = True #replace with bool check for email/user uniqueness, OTP and password conf
+    if valid:
+        return render_template('verify.html', username=user, email=email, password=password)
+    else:
+        return render_template('register.html')
+
+        

@@ -5,7 +5,7 @@
 <div class="card mx-auto" style="max-width: 400px;">
     <div class="card-header">Create Account</div>
     <div class="card-body">
-        <form id="register_form" method="POST" action="url_for">
+        <form id="register_form" method="POST" action="{{ url_for('verify_user') }}">
             <input type="text" name="username" class="form-control mb-3" placeholder="Username" required>
             <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
             <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
@@ -19,16 +19,3 @@
     </div>
 </div>
 {% endblock %}
-
-<!-- for sending email auth verification, to be implemented later-----------<form id="myForm" method="POST" action="{{ url_for('process_form_data') }}"> -->
-<!--         <label for="field1">Field 1:</label> -->
-<!--         <input type="text" id="field1" name="field1" required><br><br> -->
-
-<!--         <label for="field2">Field 2:</label> -->
-<!--         <input type="text" id="field2" name="field2" required><br><br> -->
-
-<!--         <label for="field3">Field 3:</label> -->
-<!--         <input type="text" id="field3" name="field3" required><br><br> -->
-
-<!--         <button type="submit">Submit</button> -->
-<!--     </form> -->
