@@ -105,12 +105,24 @@ def friends(username):
         return redirect(url_for('login'))
 
     uid = current_user.id
-    search_query = request.form.get('search') if request.method == 'POST' else request.args.get('search', '')
 
-    LIMIT = 10
+    # Handle form search: redirect to clean GET
+    if request.method == 'POST':
+        search = request.form.get('search', '')
+        return redirect(url_for(
+            'friends',
+            username=username,
+            search=search,
+            page_friends=1,
+            page_users=1
+        ))
+
+    # Pull query and page states
+    search_query = request.args.get('search', '')
     page_friends = int(request.args.get('page_friends', 1))
     page_users = int(request.args.get('page_users', 1))
 
+    LIMIT = 10
     offset_friends = (page_friends - 1) * LIMIT
     offset_users = (page_users - 1) * LIMIT
 
@@ -119,11 +131,13 @@ def friends(username):
     has_more_friends = len(friends) > LIMIT
     friends = friends[:LIMIT]
 
-    # Users list
+    # Right-side list: mutual friends or full user search
     if search_query:
         users = search_users(search_query, exclude_uid=uid, limit=LIMIT + 1, offset=offset_users)
+        right_header = "Users"
     else:
         users = get_mutual_users(uid, limit=LIMIT + 1, offset=offset_users)
+        right_header = "Suggested Users (Mutual Friends)"
 
     has_more_users = len(users) > LIMIT
     users = users[:LIMIT]
@@ -136,8 +150,11 @@ def friends(username):
         page_friends=page_friends,
         page_users=page_users,
         has_more_friends=has_more_friends,
-        has_more_users=has_more_users
+        has_more_users=has_more_users,
+        search_query=search_query,
+        right_header=right_header
     )
+
 
 @app.route('/add_friend/<int:uid>', methods=['POST'])
 @login_required

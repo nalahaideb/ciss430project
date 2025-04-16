@@ -53,6 +53,7 @@ def get_friends(uid, limit=10, offset=0):
                 JOIN User u ON (f.user1 = u.uid OR f.user2 = u.uid)
                 JOIN User_Credentials uc ON u.ucid = uc.ucid
                 WHERE (f.user1 = %s OR f.user2 = %s) AND u.uid != %s
+                ORDER BY uc.username ASC
                 LIMIT %s OFFSET %s
             """, (uid, uid, uid, limit, offset))
             return cursor.fetchall()
@@ -82,12 +83,12 @@ def get_mutual_users(uid, limit=10, offset=0):
                       WHERE user1 = %s OR user2 = %s
                   )
                   AND u.uid != %s
+                ORDER BY uc.username ASC
                 LIMIT %s OFFSET %s
             """, (uid, uid, uid, uid, uid, uid, uid, limit, offset))
             return cursor.fetchall()
     finally:
         conn.close()
-
 
 def search_users(query, exclude_uid, limit=10, offset=0):
     conn = get_db_connection()
