@@ -17,6 +17,7 @@ def generate_filters():
     equipment = cursor.fetchall()
     cursor.execute("select distinct etype from Exercises;")
     ex_type = cursor.fetchall()
+    print(bodyparts, equipment, ex_type)
     return bodyparts, equipment, ex_type
 
 def filter_exercises():

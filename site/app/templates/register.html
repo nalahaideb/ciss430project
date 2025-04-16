@@ -5,17 +5,17 @@
 <div class="card mx-auto" style="max-width: 400px;">
     <div class="card-header">Create Account</div>
     <div class="card-body">
-        <form method="POST">
+        <form id="register_form" method="POST" action="{{ url_for('verify_user') }}">
             <input type="text" name="username" class="form-control mb-3" placeholder="Username" required>
             <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
             <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="terms" id="terms">
-                <label class="form-check-label" for="terms">Agree with <a href="#">terms</a></label>
+                <label class="form-check-label" for="terms">Agree with <a href="https://youtu.be/o-YBDTqX_ZU">terms</a></label>
             </div>
             <button type="submit" class="btn btn-primary btn-block">REGISTER</button>
         </form>
-        <p class="mt-3">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+        <p class="mt-3">Already have an account?<a href="{{ url_for('login') }}">Login</a></p>
     </div>
 </div>
 {% endblock %}

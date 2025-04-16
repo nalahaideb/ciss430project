@@ -1,23 +1,14 @@
-def get_exercises():
+import db
+def get_exercises(muscle_groups=[], equipment=[]):
     #run filter_exercises and generate_filters before this once implemented
-    conn = pymysql.connect(user='root', passwd='root')
-    c = conn.cursor(pymysql.cursors.DictCursor)
-    c.execute("use exdb;")
-
-    target_muscles = request.form.getlist('muscle_group')
-    print("TEST TEST TEST TEST TEST TEST TEST TEST ", target_muscles)
-    c.execute("select ename, ebpart, erating from exercise;")
-    
-    #selected_categories = request.form.getlist('categories')
-
-    if target_muscles:
-        placeholders = ', '.join(['%s'] * len(selected_categories))
-        query = f"select ename, ebpart, eequip from exercise where category IN ({placeholders})"
-        print("QUERY TEST QUERY TEST QUERY TEST QUERY TEST QUERY TEST ", placeholders)
-        c.execute(query, selected_categories)
-        results = cursor.fetchall()
-    else:
-        results = []
+    # conn = pymysql.connect(user='root', passwd='root')
+    # c = conn.cursor(pymysql.cursors.DictCursor)
+    c = get_db_connection()
+    muscle_string = ''
+    equip_string = ''
+    for i in muscle_groups:
+        
+    c.execute("use exercisedb;")
+    c.execute("select * from Exercises where ebpart in (")
     c.close()
-    conn.close()
     return render_template('exdb_query_result.html', target_muscles=target_muscles, results=results)

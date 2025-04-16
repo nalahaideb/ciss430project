@@ -1,0 +1,25 @@
+<!--verify.html-->
+{% extends "base.html" %}
+{% block title %}Verfication{% endblock %}
+{% block content %}
+<html>
+<head>
+    <title>Verify Registration</title>
+</head>
+<body>
+    <h1>Please Verify Your Information</h1>
+    <p>Username: {{ username }}</p>
+    <p>Email: {{ email }}</p>
+    <p>Thank you for registering!</p>
+
+    <h2>Verify Your Email</h2>
+    <p>To complete your registration, please click the button below to send a verification email to {{ email }}.</p>
+    <form method="POST" action="{{ url_for('send_verification_email') }}">
+        <input type="hidden" name="username" value="{{ username }}">
+        <input type="hidden" name="email" value="{{ email }}">
+        <button type="submit">Send Verification Email</button>
+    </form>
+    <p>Didn't receive the email? <a href="{{ url_for('resend_verification_email') }}">Resend Verification Email</a></p>
+</body>
+</html>
+{% endblock %}

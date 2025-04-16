@@ -5,7 +5,6 @@
 <div style="display: flex;">
     <div style="flex: 4; margin-right: 20px;">
         <h1>Exercise Plans for {{ username }}</h1>
-
         <form method="POST">
             <ul>
                 {% for exercise in user_exercises %}
@@ -20,7 +19,6 @@
             <button type="submit">Add to Plan</button>
         </form>
     </div>
-
     <div style="flex: 2; margin-right: 40px;">
         <h2>Your Exercises</h2>
         <table style="width: 100%;">
