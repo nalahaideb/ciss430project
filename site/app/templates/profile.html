@@ -27,6 +27,17 @@
                         <form method="POST" action="{{ url_for('remove_friend_route', uid=user.id) }}">
                             <button type="submit" class="btn btn-outline-danger mt-2">Remove Friend</button>
                         </form>
+                    {% elif show_accept_reject %}
+                        <form method="POST" action="{{ url_for('approve_friend', frid=frid) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-success mt-2">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_friend', frid=frid) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger mt-2">Reject</button>
+                        </form>
+                    {% elif request_sent %}
+                        <form method="POST" action="{{ url_for('cancel_friend_request_route', frid=frid) }}">
+                            <button type="submit" class="btn btn-outline-warning mt-2">Cancel Friend Request</button>
+                        </form>
                     {% else %}
                         <form method="POST" action="{{ url_for('add_friend', uid=user.id) }}">
                             <button type="submit" class="btn btn-outline-primary mt-2">Add Friend</button>
@@ -38,7 +49,7 @@
     </div>
 </div>
 
-<!-- Pending Friend Requests -->
+<!-- Incoming Friend Requests -->
 {% if current_user.username == user.username and pending_requests and pending_requests|length > 0 %}
 <div class="row justify-content-center mt-4">
     <div class="col-md-6">
@@ -47,10 +58,10 @@
             <ul class="list-group list-group-flush">
                 {% for request in pending_requests[:5] %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
+                        <a href="{{ url_for('profile', username=request.username) }}" class="text-decoration-none text-dark">
                             <strong>{{ request.username }}</strong><br>
                             <small>{{ request.fname }} {{ request.lname }}</small>
-                        </div>
+                        </a>
                         <div class="d-flex gap-2">
                             <form method="POST" action="{{ url_for('approve_friend', frid=request.frid) }}" style="margin-right: 5px;">
                                 <button type="submit" class="btn btn-sm btn-success">Approve</button>
@@ -71,4 +82,35 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Outgoing Friend Requests -->
+{% if current_user.username == user.username and sent_requests and sent_requests|length > 0 %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Sent Friend Requests</div>
+            <ul class="list-group list-group-flush">
+                {% for request in sent_requests[:5] %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('profile', username=request.username) }}" class="text-decoration-none text-dark">
+                            <strong>{{ request.username }}</strong><br>
+                            <small>{{ request.fname }} {{ request.lname }}</small>
+                        </a>
+                        <form method="POST" action="{{ url_for('cancel_friend_request_route', frid=request.frid) }}">
+                            <button type="submit" class="btn btn-sm btn-warning">Cancel</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if sent_requests|length > 5 %}
+                <div class="card-footer text-center">
+                    <em>Only showing latest 5 requests</em>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
+
+

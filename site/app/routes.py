@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
-from app.user_management.util import update_user_profile, update_last_login, get_friends, get_mutual_users, search_users, get_friend_requests, send_friend_request, approve_friend_request, reject_friend_request, remove_friend, is_friends
+from app.user_management.util import *
 from app import app
 from datetime import datetime
 import pytz
@@ -61,19 +61,35 @@ def profile(username):
 
     is_own_profile = current_user.username == username
     show_add_friend = not is_own_profile
+    request_status = None
+    show_accept_reject = False
+    request_sent = False
+    frid = None
 
-    # Check if they're already friends
-    user.is_friend = is_friends(current_user.id, user.id) if show_add_friend else False
+    if not is_own_profile:
+        user.is_friend = is_friends(current_user.id, user.id)
 
-    pending_requests = []
-    if is_own_profile:
-        pending_requests = get_friend_requests(current_user.id, limit=6)
+        if not user.is_friend:
+            request_status = get_friend_request_status(current_user.id, user.id)
+            if request_status['incoming']:
+                show_accept_reject = True
+                frid = request_status['incoming']
+            elif request_status['outgoing']:
+                request_sent = True
+                frid = request_status['outgoing']
+
+    pending_requests = get_friend_requests(current_user.id, limit=6) if is_own_profile else []
+    sent_requests = get_sent_friend_requests(current_user.id, limit=6) if is_own_profile else []
 
     return render_template(
         'profile.html',
         user=user,
         show_add_friend=show_add_friend,
-        pending_requests=pending_requests
+        show_accept_reject=show_accept_reject,
+        request_sent=request_sent,
+        frid=frid,
+        pending_requests=pending_requests,
+        sent_requests=sent_requests
     )
 
 @app.route('/<username>/edit_profile', methods=['GET', 'POST'])
@@ -206,6 +222,17 @@ def remove_friend_route(uid):
     else:
         flash("Failed to remove friend.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+@app.route('/cancel_friend_request/<int:frid>', methods=['POST'])
+@login_required
+def cancel_friend_request_route(frid):
+    success = cancel_friend_request_by_id(frid, current_user.id)
+    if success:
+        flash("Friend request cancelled.")
+    else:
+        flash("Failed to cancel friend request.")
+    return redirect(request.referrer or url_for('profile', username=current_user.username))
+
 
 @app.route('/<username>/exercise_plan')
 @login_required

@@ -123,6 +123,48 @@ def get_friend_requests(receiver_id, limit=5, offset=0):
     finally:
         conn.close()
 
+def get_friend_request_status(uid1, uid2):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Check if uid1 sent a request to uid2
+            cursor.execute("""
+                SELECT frid FROM Friend_Requests
+                WHERE sender_id = %s AND receiver_id = %s
+            """, (uid1, uid2))
+            outgoing = cursor.fetchone()
+
+            # Check if uid2 sent a request to uid1
+            cursor.execute("""
+                SELECT frid FROM Friend_Requests
+                WHERE sender_id = %s AND receiver_id = %s
+            """, (uid2, uid1))
+            incoming = cursor.fetchone()
+
+            return {
+                'incoming': incoming['frid'] if incoming else None,
+                'outgoing': outgoing['frid'] if outgoing else None
+            }
+    finally:
+        conn.close()
+
+def get_sent_friend_requests(sender_id, limit=5, offset=0):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT fr.frid, uc.username, u.fname, u.lname
+                FROM Friend_Requests fr
+                JOIN User u ON u.uid = fr.receiver_id
+                JOIN User_Credentials uc ON u.ucid = uc.ucid
+                WHERE fr.sender_id = %s
+                ORDER BY fr.request_date DESC
+                LIMIT %s OFFSET %s
+            """, (sender_id, limit, offset))
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
 def send_friend_request(sender_id, receiver_id):
     if sender_id == receiver_id:
         return "self_request"
@@ -194,7 +236,6 @@ def approve_friend_request(frid, receiver_id):
     finally:
         conn.close()
 
-
 def reject_friend_request(frid, receiver_id):
     conn = get_db_connection()
     try:
@@ -226,6 +267,23 @@ def remove_friend(uid1, uid2):
     except Exception as e:
         conn.rollback()
         print("Error removing friend:", e)
+        return False
+    finally:
+        conn.close()
+
+def cancel_friend_request_by_id(frid, sender_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM Friend_Requests
+                WHERE frid = %s AND sender_id = %s
+            """, (frid, sender_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        conn.rollback()
+        print("Error cancelling friend request:", e)
         return False
     finally:
         conn.close()
