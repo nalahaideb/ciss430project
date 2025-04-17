@@ -9,6 +9,6 @@ def get_exercises(muscle_groups=[], equipment=[]):
     for i in muscle_groups:
         
     c.execute("use exercisedb;")
-    c.execute("select * from Exercises where ebpart in (")
+    c.execute("select * from Exercises where ebpart in (" + mus)
     c.close()
     return render_template('exdb_query_result.html', target_muscles=target_muscles, results=results)
