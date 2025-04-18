@@ -1,12 +1,14 @@
 # file: routes.py
+from app import app
 from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
 from app.user_management.util import *
-from app import app
 from datetime import datetime
 import pytz
+from app.backend_functions.exercise_backend import get_exercises
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -257,16 +259,19 @@ def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
     
-    muscle_groups = []
-    ex_level = []
-    exercises = [] 
+    muscle_groups = None
+    ex_level = None
+    exercises = None
     if request.method == 'POST':
         muscle_groups = request.form.getlist('muscle_group')
+        #print(muscle_groups)
         ex_level = request.form.get('ex_level')
         equipment = request.form.get('equipment')
+        #print(equipment)
+        #ill add this when i can implement it correctly
         #ex_name = request.form.get('search_field')
-        exercises = get_exercises_from_db(muscle_groups, ex_level)
-    #if request.method == 'GET':2
+        exercises = get_exercises(muscle_groups, ex_level)
+        print(exercises)
     return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
         
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
