@@ -5,9 +5,11 @@ from werkzeug.security import check_password_hash
 from app.user_management.models import User
 from app.user_management.util import *
 from app import app
-from app.email import *
+from app.email.emaillib import *
+#print(dir(emaillib))
 from datetime import datetime
 import pytz
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -290,30 +292,15 @@ def verify_user():
     email = request.form.get('email')
     password = request.form.get('password')
     print("USER INFO =", user, email, password)
-    # basic input validation
+
     if not user or not email or not password:
         return "Error: Please fill in all fields.", 400
-
-    # check if the username or email already exists in the database
-    # existing_user = User.query.filter_by(username=username).first()
-    # existing_email = User.query.filter_by(email=email).first()
     existing_user = None  
     existing_email = None 
-
-    # if existing_user:
-    #     return "Error: Username already exists.", 409
-    # if existing_email:
-    #     return "Error: Email already exists.", 409
-
-    #hashed_password = generate_password_hash(password)
-
-    # At this point, the data is valid and the user doesn't exist.
-    # You would typically save this user data to your database here.
-    # new_user = User(username=username, email=email, password_hash=hashed_password)
-    # db.session.add(new_user)
-    # db.session.commit()
-    valid = verify_new_user(user, email) #replace with bool check for email/user uniqueness, OTP and password conf
+    OTP = generate_OTP()
+    valid = verify_new_user(user, email, OTP) #replace with bool check for email/user uniqueness, OTP and password conf
     if valid:
+        send_auth_email(email, user)
         return render_template('verify.html', username=user, email=email, password=password)
     else:
         return render_template('register.html')
