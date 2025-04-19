@@ -2,92 +2,139 @@
 {% block title %}exercise_list{% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-md-3">
-        <a href="{{ url_for('exercise_list', username=user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Exercises</h5>
-                    <p class="card-text">Browse all available exercises</p>
-                </div>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-3">
+                <a href="{{ url_for('exercise_list', username=user.username) }}" class="text-decoration-none">
+                    <!-- <div class="card text-white bg-warning mb-3"> -->
+                    <!--     <div class="card-body"> -->
+                    <!--         <h5 class="card-title">Exercises</h5> -->
+                    <!--         <p class="card-text">Browse all available exercises</p> -->
+                    <!--     </div> -->
+                    <!-- </div> -->
+                </a>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Add an exercise</h5>
-                    <p class="card-text">Add a new exercise to the database</p>
-                </div>
+            <div class="col-md-3">
+                <a href="#" class="text-decoration-none">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Add an exercise</h5>
+                            <p class="card-text">Add a new exercise to the database</p>
+                        </div>
+                    </div>
+                </a>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Progress</h5>
-                    <p class="card-text">Track your progress</p>
-                </div>
+            <div class="col-md-3">
+                <a href="#" class="text-decoration-none">
+                    <div class="card text-white bg-danger mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Progress</h5>
+                            <p class="card-text">Track your progress</p>
+                        </div>
+                    </div>
+                </a>
             </div>
-        </a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">Exercises</div>
-            <form method="POST">
-                <input type="checkbox" name="muscle_group" value="Abdominals">Abdominals<br>
-                <input type="checkbox" name="muscle_group" value="Biceps">Biceps<br>
-                <input type="checkbox" name="muscle_group" value="Chest">Chest<br>
-                <input type="checkbox" name="muscle_group" value="Cardio">Cardio<br>
-                <input type="checkbox" name="muscle_group" value="Back">Back<br>
-                <input type="checkbox" name="muscle_group" value="Glutes">Glutes<br>
-                <input type="checkbox" name="muscle_group" value="Triceps">Triceps<br>
-                <input type="checkbox" name="muscle_group" value="Forearms">Forearms<br>
-                <input type="checkbox" name="muscle_group" value="Shoulders">Shoulders<br>
-                <input type="checkbox" name="muscle_group" value="Hamstrings">Hamstrings<br>
-                <input type="reset" value="Reset">
-                <input type="submit" value="Search">
-                <br>
-                <input type="radio" name="ex_level" value="Beginner"> Beginner<br>
-                <input type="radio" name="ex_level" value="Intermediate"> Intermediate<br>
-                <input type="radio" name="ex_level" value="Advanced"> Advanced<br>
-            </form>
         </div>
-
-        {% if muscle_groups or ex_level %}
-            <div class="card mt-4">
-                <div class="card-header">Selected Filters</div>
-                <div class="card-body">
-                    {% if muscle_groups %}
-                        <p><strong>Muscle Groups:</strong> {{ ', '.join(muscle_groups) }}</p>
-                    {% endif %}
-                    {% if ex_level %}
-                        <p><strong>Exercise Level:</strong> {{ ex_level }}</p>
-                    {% endif %}
-                </div>
+        <div class="row">
+            <div class="col-md-8">
+                {% if exercises %}
+                    <div class="card mt-4">
+                        <div class="card-header">Search Results</div>
+                        <div class="card-body">
+                            {% if exercises|length > 0 %}
+                                <table style="border-collapse: collapse; width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th style="border: 2px solid black; padding: 12px; text-align: left; font-size: 18px;">ID</th>
+                                            <th style="border: 2px solid black; padding: 12px; text-align: left; font-size: 18px;">Name</th>
+                                            <th style="border: 2px solid black; padding: 12px; text-align: left; font-size: 18px;">Type</th>
+                                            <th style="border: 2px solid black; padding: 12px; text-align: left; font-size: 18px;">Muscle</th>
+                                            <th style="border: 2px solid black; padding: 12px; text-align: left; font-size: 18px;">Equipment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exercise in exercises %}
+                                        <tr>
+                                            <td style="border: 2px solid black; padding: 12px; font-size: 16px;">{{ exercise.eid }}</td>
+                                            <td style="border: 2px solid black; padding: 12px; font-size: 16px; font-weight: bold;">{{ exercise.ename }}</td>
+                                            <td style="border: 2px solid black; padding: 12px; font-size: 16px;">{{ exercise.etype }}</td>
+                                            <td style="border: 2px solid black; padding: 12px; font-size: 16px;">{{ exercise.ebpart }}</td>
+                                            <td style="border: 2px solid black; padding: 12px; font-size: 16px;">{{ exercise.eequip }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p>No exercises found matching your criteria.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-        {% endif %}
-
-        {% if exercises %}
-            <div class="card mt-4">
-                <div class="card-header">Search Results</div>
-                <div class="card-body">
-                    {% if exercises|length > 0 %}
-                        <ul>
-                            {% for exercise in exercises %}
-                                <li>{{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No exercises found matching your criteria.</p>
-                    {% endif %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">Exercises</div>
+                    <form method="POST">
+                        <input type="checkbox" name="muscle_group" value="Abdominals">Abdominals<br>
+                        <input type="checkbox" name="muscle_group" value="Biceps">Biceps<br>
+                        <input type="checkbox" name="muscle_group" value="Chest">Chest<br>
+                        <input type="checkbox" name="muscle_group" value="Cardio">Cardio<br>
+                        <input type="checkbox" name="muscle_group" value="Back">Back<br>
+                        <input type="checkbox" name="muscle_group" value="Glutes">Glutes<br>
+                        <input type="checkbox" name="muscle_group" value="Triceps">Triceps<br>
+                        <input type="checkbox" name="muscle_group" value="Forearms">Forearms<br>
+                        <input type="checkbox" name="muscle_group" value="Shoulders">Shoulders<br>
+                        <input type="checkbox" name="muscle_group" value="Hamstrings">Hamstrings<br>
+                        <input type="reset" value="Reset">
+                        <input type="submit" value="Search">
+                        <br>
+                        <input type="radio" name="ex_level" value="Beginner"> Beginner<br>
+                        <input type="radio" name="ex_level" value="Intermediate"> Intermediate<br>
+                        <input type="radio" name="ex_level" value="Advanced"> Advanced<br>
+                    </form>
+                    <div class="card-header">Equipment</div>
+                    <form method="POST">
+                      {% for e in equipment %}
+                      <input type="checkbox" name="equip_group" value="{{e}}">{{e}}<br>
+                      {% endfor %}
+                    </form>
+                    <!-- <div class="card mt-4"> -->
+                <!--     <div class="card-header">Equipment</div> -->
+                <!--     <div class="card-body"> -->
+                <!--         <form method="POST"> -->
+                <!--             {% for equipment in equipment_list %} -->
+                <!--                 <div class="form-check"> -->
+                <!--                     <input class="form-check-input" type="checkbox" name="equipment" value="{{ equipment }}" id="equipment_{{ loop.index }}"> -->
+                <!--                     <label class="form-check-label" for="equipment_{{ loop.index }}"> -->
+                <!--                         {{ equipment }} -->
+                <!--                     </label> -->
+                <!--                 </div> -->
+                <!--             {% endfor %} -->
+                <!--             <input type="submit" value="Filter by Equipment"> -->
+                <!--         </form> -->
+                <!--     </div> -->
+                    </div>
                 </div>
+
+                {% if muscle_groups or ex_level %}
+                    <div class="card mt-4">
+                        <div class="card-header">Selected Filters</div>
+                        <div class="card-body">
+                            {% if muscle_groups %}
+                                <p><strong>Muscle Groups:</strong> {{ ', '.join(muscle_groups) }}</p>
+                            {% endif %}
+                            {% if ex_level %}
+                                <p><strong>Exercise Level:</strong> {{ ex_level }}</p>
+                            {% endif %}
+                            {% if equipment %}
+                            <p><strong>Equipment:</strong> {{ equipment }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
             </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

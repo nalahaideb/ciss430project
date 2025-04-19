@@ -1,4 +1,5 @@
 # file: routes.py
+from app import app
 from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
@@ -9,6 +10,7 @@ from app.email.emaillib import *
 #print(dir(emaillib))
 from datetime import datetime
 import pytz
+from app.backend_functions.exercise_backend import *
 
 @app.route('/')
 @app.route('/index')
@@ -259,18 +261,25 @@ def exercise_plan(username):
 def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    
-    muscle_groups = []
-    ex_level = []
-    exercises = [] 
+    muscle_groups = None
+    exercises = None
+    equipment = None
+    ex_level = None
+    name = None
     if request.method == 'POST':
-        muscle_groups = request.form.getlist('muscle_group')
         ex_level = request.form.get('ex_level')
-        equipment = request.form.get('equipment')
+        muscle_groups = request.form.getlist('muscle_group')
+        if muscle_groups == None:
+            muscle_groups = list_muscles()
+        equipment = request.form.get('equip_group')
+        #print("EQUIP TYPE=", type(equipment))
+        if equipment == None:
+            equipment = list_equipment()
+        #ill add this when i can implement it correctly
         #ex_name = request.form.get('search_field')
-        exercises = get_exercises_from_db(muscle_groups, ex_level)
-    #if request.method == 'GET':2
-    return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+        exercises = get_exercises(muscle_groups, equipment, ex_level, name)
+        #print(exercises)
+    return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment=equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
         
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
@@ -295,6 +304,10 @@ def verify_user():
 
     if not user or not email or not password:
         return "Error: Please fill in all fields.", 400
+
+    # check if the username or email already exists in the database
+    # existing_user = User.query.filter_by(username=username).first()
+    # existing_email = User.query.filter_by(email=email).first()
     existing_user = None  
     existing_email = None 
     OTP = generate_OTP()
