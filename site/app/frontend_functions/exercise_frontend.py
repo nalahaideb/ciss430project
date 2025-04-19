@@ -1,58 +1,26 @@
 import pymysql
-def generate_filters():
-    conn = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-        )
-    cursor = conn.cursor()
-    bodyparts = []
-    equipment = []
-    ex_type = []
-    cursor.execute("select distinct ebpart from Exercises;")
-    bodyparts = cursor.fetchall()
-    cursor.execute("select distinct eequip from Exercises;")
-    equipment = cursor.fetchall()
-    cursor.execute("select distinct etype from Exercises;")
-    ex_type = cursor.fetchall()
-    print(bodyparts, equipment, ex_type)
-    return bodyparts, equipment, ex_type
 
-def filter_exercises():
-    #join tables according to filters
-    
-    #return the level of exercise expertise selected
-    level = request.form.get('ex_level')
+# def generate_filters():
+#     conn = pymysql.connect(
+#         host='localhost',
+#         user='root',
+#         password='root',
+#         database='exercisedb',
+#         cursorclass=pymysql.cursors.DictCursor
+#         )
+#     cursor = conn.cursor()
+#     bodyparts = []
+#     equipment = []
+#     ex_type = []
+#     cursor.execute("select distinct ebpart from Exercises;")
+#     bodyparts = cursor.fetchall()
+#     cursor.execute("select distinct eequip from Exercises;")
+#     equipment = cursor.fetchall()
+#     cursor.execute("select distinct etype from Exercises;")
+#     ex_type = cursor.fetchall()
+#     print(bodyparts, equipment, ex_type)
+#     return bodyparts, equipment, ex_type
 
-    #some kind of loop to get all exercises w/ a certain body part
-    target_muscles = request.form.getlist('muscle_group')
-
-    #get equipment selected
-    equipment_list = request.form.getlist('EQUIPMENT_CHECKBOX')
-
-    #if no entry do not include rating in query, clear rating if not a number
-    # rating = request.form.get('rating')
-    # if isalpha(rating):
-    #     rating = None
-        
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-
-    query = "select * from exercise where "
-    #for i in
-    cursor.execute(query, (firstname, lastname))
-    
-    results = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-
-    #     return render_template('', results=results)
-
-    # return render_template('')
-    return
 
 def add_exercises():
     #if request.method == 'GET':

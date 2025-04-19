@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash
 from app.user_management.models import User
 from app.user_management.util import *
 from app import app
+from app.email import *
 from datetime import datetime
 import pytz
 @app.route('/')
@@ -283,7 +284,7 @@ def view_function(username):
     return render_template('exercise_plan.html', username=username, exercises=exercises, now=now_local)
 
 #should probably have this confirm the user is registered before we enable them to log on to anything else
-@app.route('/verify', methods=['POST'])
+@app.route('/verify', methods=['POST', 'GET'])
 def verify_user():
     user = request.form.get('username')
     email = request.form.get('email')
@@ -311,7 +312,7 @@ def verify_user():
     # new_user = User(username=username, email=email, password_hash=hashed_password)
     # db.session.add(new_user)
     # db.session.commit()
-    valid = True #replace with bool check for email/user uniqueness, OTP and password conf
+    valid = verify_new_user(user, email) #replace with bool check for email/user uniqueness, OTP and password conf
     if valid:
         return render_template('verify.html', username=user, email=email, password=password)
     else:
