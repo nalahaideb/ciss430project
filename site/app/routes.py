@@ -7,7 +7,7 @@ from app.user_management.models import User
 from app.user_management.util import *
 from datetime import datetime
 import pytz
-from app.backend_functions.exercise_backend import get_exercises
+from app.backend_functions.exercise_backend import *
 
 @app.route('/')
 @app.route('/index')
@@ -258,21 +258,25 @@ def exercise_plan(username):
 def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    
     muscle_groups = None
-    ex_level = None
     exercises = None
+    equipment = None
+    ex_level = None
+    name = None
     if request.method == 'POST':
-        muscle_groups = request.form.getlist('muscle_group')
-        #print(muscle_groups)
         ex_level = request.form.get('ex_level')
-        equipment = request.form.get('equipment')
-        #print(equipment)
+        muscle_groups = request.form.getlist('muscle_group')
+        if muscle_groups == None:
+            muscle_groups = list_muscles()
+        equipment = request.form.get('equip_group')
+        #print("EQUIP TYPE=", type(equipment))
+        if equipment == None:
+            equipment = list_equipment()
         #ill add this when i can implement it correctly
         #ex_name = request.form.get('search_field')
-        exercises = get_exercises(muscle_groups, ex_level)
-        print(exercises)
-    return render_template('exercise_list.html', user=current_user, exercises=exercises, muscle_groups=muscle_groups, ex_level=ex_level)
+        exercises = get_exercises(muscle_groups, equipment, ex_level, name)
+        #print(exercises)
+    return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment=equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
         
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
