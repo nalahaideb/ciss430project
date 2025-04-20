@@ -7,7 +7,6 @@ from app.user_management.models import User
 from app.user_management.util import *
 from app import app
 from app.email.emaillib import *
-#print(dir(emaillib))
 from datetime import datetime
 import pytz
 from app.backend_functions.exercise_backend import *
@@ -269,16 +268,15 @@ def exercise_list(username):
     if request.method == 'POST':
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
-        #not polling from equip_group, go to hell html
-        selected_equipment = request.form.get('equip_group')
+        selected_equipment = request.form.getlist('equip_group')
         print("!!!!!!!!!!!!SELECTIONS!!!!!!!!!!!!\n", muscle_groups, "\n\n", selected_equipment)
         if len(muscle_groups) <= 0:
             muscle_groups = list_muscles()
-        if selected_equipment == None:
+        if len(selected_equipment) <= 0:
             selected_equipment = default_equipment
         #ill add this when i can implement it correctly
         #name = request.form.get('search_field')
-        print("SELECTED EQUIPMENT", selected_equipment)
+        print("SELECTED EQUIPMENT", selected_equipment, type(selected_equipment))
         exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name)
 
     return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
