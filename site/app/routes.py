@@ -261,34 +261,34 @@ def exercise_plan(username):
 def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    muscle_groups = None
-    exercises = None
-    equipment = None
+    muscle_groups = list_muscles()
+    exercises = []
+    default_equipment = list_equipment()
     ex_level = None
     name = None
     if request.method == 'POST':
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
-        if muscle_groups == None:
+        #not polling from equip_group, go to hell html
+        selected_equipment = request.form.get('equip_group')
+        print("!!!!!!!!!!!!SELECTIONS!!!!!!!!!!!!\n", muscle_groups, "\n\n", selected_equipment)
+        if len(muscle_groups) <= 0:
             muscle_groups = list_muscles()
-        equipment = request.form.get('equip_group')
-        #print("EQUIP TYPE=", type(equipment))
-        if equipment == None:
-            equipment = list_equipment()
+        if selected_equipment == None:
+            selected_equipment = default_equipment
         #ill add this when i can implement it correctly
-        #ex_name = request.form.get('search_field')
-        exercises = get_exercises(muscle_groups, equipment, ex_level, name)
-        #print(exercises)
-    return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment=equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
+        #name = request.form.get('search_field')
+        print("SELECTED EQUIPMENT", selected_equipment)
+        exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name)
+
+    return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
         
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
 def view_function(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    exercises = [
-        {'id': 1, 'name': 'Exercise A', 'level': 'Beginner', 'muscle_group': 'Group X'}
-    ]
+
     now_utc = datetime.now(pytz.utc)
     current_timezone = pytz.timezone('America/Chicago')
     now_local = now_utc.astimezone(current_timezone)
@@ -305,16 +305,13 @@ def verify_user():
     if not user or not email or not password:
         return "Error: Please fill in all fields.", 400
 
-    # check if the username or email already exists in the database
-    # existing_user = User.query.filter_by(username=username).first()
-    # existing_email = User.query.filter_by(email=email).first()
     existing_user = None  
     existing_email = None 
     OTP = generate_OTP()
     valid = verify_new_user(user, email, OTP) #replace with bool check for email/user uniqueness, OTP and password conf
     if valid:
         send_auth_email(email, user)
-        return render_template('verify.html', username=user, email=email, password=password)
+        return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=OTP)
     else:
         return render_template('register.html')
 

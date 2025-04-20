@@ -9,25 +9,33 @@ def connect():
         database='exercisedb',
         cursorclass=pymysql.cursors.DictCursor
     )
-'''
-THE STRING REPLACEMENT FOR REMOVING SPACES IS CAUSING MULTI-WORD EQUIPMENT AND MUSCLES TO CONCAT, NEED TO FIX OR WORK AROUND LATER
-'''
 def list_muscles():
     conn = connect()
     c = conn.cursor()
     c.execute("SELECT GROUP_CONCAT(DISTINCT ebpart SEPARATOR ', ') AS ebpart FROM Exercises;")
     muscle_arr = c.fetchall()
     muscle_string = str(muscle_arr[0])
+    #print("MUSCLE STRING 1", muscle_string)
     muscle_string = muscle_string[11:len(muscle_string)-2]
+    muscle_string = muscle_string.replace("'",'')
+    muscle_string = muscle_string.replace('"','')
+    muscle_string = muscle_string.replace(' ','')
     muscle_arr = muscle_string.split(',')
-    muscle_string = ''
+    #print("MUSCLE ARR 2", muscle_arr)
+    # muscle_string = ''
     for i in muscle_arr:
-        muscle_string += "\'%s\'," % i
-    muscle_string = muscle_string[:len(muscle_string) - 1]
-    muscle_string = muscle_string.replace(' ', '')
-    c.close()
-    conn.close()
-    return muscle_string
+        i = i.replace(' ', '')
+    
+    #print("MUSCLE ARR 3", muscle_arr)
+    #     muscle_string += "\'%s\'," % i
+    # muscle_string = muscle_string[:len(muscle_string) - 1]
+    # muscle_string = muscle_string.replace(' ', '')
+    # c.close()
+    # conn.close()
+    # return muscle_string
+    #print("MUSCLE ARRAY!!!!!!!!!!!!!!", muscle_arr)
+    return muscle_arr
+    
 
 def list_equipment():
     conn = connect()
@@ -37,40 +45,45 @@ def list_equipment():
     equip_string = str(equip_arr[0])
     equip_string = equip_string[11:len(equip_string)-2]
     equip_arr = equip_string.split(',')
-    equip_string = ''
+    # equip_string = ''
+    ret = []
     for i in equip_arr:
-        equip_string += "\'%s\'," % i
-    equip_string = equip_string[:len(equip_string) - 1]
-    equip_string = equip_string.replace(' ', '')
+        #i dont know why it always prefaces each i with a space after the first entry, but this is a quick fix
+        if i[0] == ' ':
+            i = i[1:]
+        ret.append(i)
+    #     equip_string += "'%s'," % i
+    #print("!!!!!!!!!!!!!!!!!!!EQUIP_ARR: ", ret)
+    return ret
+    
+    # equip_string = equip_string[:len(equip_string) - 1]
     c.close()
     conn.close()
-    return equip_string
+    # print("EQUIPMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", equip_string)
+    # return equip_string
 
 def get_exercises(muscle_groups, equipment, level, name):
     conn = connect()
     c = conn.cursor()
     muscle_string = ''
     equip_string = ''
-    #print("PASSED DATA TO GET_EXERCISES::: ", muscle_groups, equipment)
     if muscle_groups != None:
         for i in muscle_groups:
             muscle_string +="'%s'," % i
         muscle_string = muscle_string[:len(muscle_string) - 1]
     else:
         muscle_string = list_muscles()
-    equip_string = list_equipment()
-        # c.execute("SELECT GROUP_CONCAT(DISTINCT eequip SEPARATOR ', ') AS equip FROM Exercises;")
-        # equip_arr = c.fetchall()
-        # equip_string = str(equip_arr[0])
-        # equip_string = equip_string[11:len(equip_string)-2]
-        # #print("equip results:", equip_string, type(equip_string))
-        # equip_arr = equip_string.split(',')
-        # equip_string = ''
-        # for i in equip_arr:
-        #     equip_string += "\'%s\'," % i
-        # equip_string = equip_string[:len(equip_string) - 1]
-        # equip_string = equip_string.replace(' ', '')
-        #print("equipment:",equip_string)
+
+    if equipment != None:
+        for i in equipment:
+            equip_string +="'%s'," % i
+        equip_string = equip_string[:len(equip_string) - 1]
+    else:
+        equip_string = list_equipment()
+
+    # equip_string = str(list_equipment())
+    # equip_string = equip_string[1:len(equip_string) - 1]
+    
     print("select * from Exercises where ebpart in (%s) and eequip in (%s)" % (muscle_string, equip_string))
     c.execute("select * from Exercises where ebpart in (%s) and eequip in (%s)" % (muscle_string, equip_string))
     results = c.fetchall()
