@@ -85,8 +85,8 @@ def verify_new_user(user, email):
     print("ISEMAIL", is_email, "ISUSER", is_user)
     return True
 
-def send_auth_email(useremail, username):
-    message = "Welcome to MySQLPal. This is a clone of MyFitnessPal, dedicated to recording past exercises and setting goals for future exercises. To verify your account, enter the following OTP into the screen on the MySQLPal verification page:\n %s" % generate_OTP()
+def send_auth_email(useremail, username, otp):
+    message = "Welcome to MySQLPal. This is a clone of MyFitnessPal, dedicated to recording past exercises and setting goals for future exercises. To verify your account, enter the following OTP into the screen on the MySQLPal verification page:\n %s" % otp
     subject = 'Welcome to MySQLPal %s !!!' % username
     sendgmail(useremail, GMAIL, subject, message)
     return

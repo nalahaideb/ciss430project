@@ -321,18 +321,15 @@ def verify_user():
 
             if user and email and password:
                 valid = verify_new_user(user, email)
-                if valid:
-                    otp = generate_OTP()  # Generate OTP
-                    send_auth_email(email, user)  # Send OTP email
-                    return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)  # Show OTP input form
-                else:
-                    print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
-                    return render_template('register.html', error_message="Username or email already exists")
+                otp = generate_OTP()  # Generate OTP
+                send_auth_email(email, user, otp)  # Send OTP email #added otp
+                return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)  # Show OTP input form
             else:
-                print("POST (Reg): RETURNING REGISTER, ONE FIELD WAS NULL")
-                return render_template('register.html', error_message="Please fill in all fields")
+                print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
+                return render_template('register.html', error_message="Username or email already exists")
     elif request.method == 'GET':
         return render_template('register.html')
+
 # @app.route('/verify', methods=['POST', 'GET'])
 # def verify_user():
 #     user = request.form.get('username')
