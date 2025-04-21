@@ -65,7 +65,7 @@ def generate_OTP():
     return random.randrange(10000000, 99999999)
 
 #runs two simple queries to determine if a user already has been registered with either the username or the email, both being unique
-def verify_new_user(user, email, OTP):
+def verify_new_user(user, email):
     conn = pymysql.connect(
         host='localhost',
         user='root',
@@ -74,10 +74,10 @@ def verify_new_user(user, email, OTP):
         cursorclass=pymysql.cursors.DictCursor
         )
     c = conn.cursor()
-    print("SELECT email FROM User_Credentials WHERE email LIKE %" + email + '%;')
-    c.execute("SELECT email FROM User_Credentials WHERE email LIKE '%" + email + "%';")
+    print("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
+    c.execute("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
     is_email = c.fetchone()
-    c.execute("SELECT username FROM User_Credentials WHERE username LIKE '%" + user + "%';")
+    c.execute("SELECT username FROM User_Credentials WHERE username = '%s';" % user)
     is_user = c.fetchone()
     
     c.close()

@@ -295,22 +295,68 @@ def view_function(username):
 #should probably have this confirm the user is registered before we enable them to log on to anything else
 @app.route('/verify', methods=['POST', 'GET'])
 def verify_user():
-    user = request.form.get('username')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    print("USER INFO =", user, email, password)
+    if request.method == 'POST':
+        if 'OTP_FORM' in request.form:
+            # User has submitted the OTP form
+            user = request.form.get('username')
+            otp_entered = request.form.get('OTP_FORM')
+            otp_code = request.form.get('OTP_CODE')
+            email = request.form.get('email')
+            password = request.form.get('password')
 
-    if not user or not email or not password:
-        return "Error: Please fill in all fields.", 400
+            print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
 
-    existing_user = None  
-    existing_email = None 
-    OTP = generate_OTP()
-    valid = verify_new_user(user, email, OTP) #replace with bool check for email/user uniqueness, OTP and password conf
-    if valid:
-        send_auth_email(email, user)
-        return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=OTP)
-    else:
+            if otp_entered == otp_code:
+                print("POST (OTP): user verified\n")
+                return redirect(url_for('dashboard', username=user))  # Redirect to dashboard
+            else:
+                print("POST (OTP): Invalid OTP")
+                return render_template('verify.html', username=user, error_message="Invalid OTP. Please try again.", OTP_CODE=otp_code, email=email, password=password)  # Show verify again
+        else:
+            # User has submitted the initial registration form (username, email, password)
+            user = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            print("POST (Reg): USER INFO =", user, email, password)
+
+            if user and email and password:
+                valid = verify_new_user(user, email)
+                if valid:
+                    otp = generate_OTP()  # Generate OTP
+                    send_auth_email(email, user)  # Send OTP email
+                    return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)  # Show OTP input form
+                else:
+                    print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
+                    return render_template('register.html', error_message="Username or email already exists")
+            else:
+                print("POST (Reg): RETURNING REGISTER, ONE FIELD WAS NULL")
+                return render_template('register.html', error_message="Please fill in all fields")
+    elif request.method == 'GET':
         return render_template('register.html')
+# @app.route('/verify', methods=['POST', 'GET'])
+# def verify_user():
+#     user = request.form.get('username')
+#     email = request.form.get('email')
+#     password = request.form.get('password')
+#     print("USER INFO =", user, email, password)
+#     #perform verification here
+#     OTP = generate_OTP()
+#     if not user or not email or not password:
+#         return "Error: Please fill in all fields.", 400
+#     if request.method == 'GET':
+#         OTP_ENTERED = request.form.get('OTP_FORM')
+#         if OTP_ENTERED == OTP:
+#             print("user verified\n")
+#             return redirect(url_for('dashboard', username=user))
+#     if request.method == 'POST':
+#         existing_user = None  
+#         existing_email = None 
+#         OTP = generate_OTP()
+#         valid = verify_new_user(user, email) #replace with bool check for email/user uniqueness, OTP and password conf
+#         if valid:
+#             send_auth_email(email, user)
+#             return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=OTP)
+#         else:
+#             return render_template('register.html')
 
         

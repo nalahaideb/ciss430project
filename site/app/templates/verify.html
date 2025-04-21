@@ -1,6 +1,5 @@
-<!--verify.html-->
 {% extends "base.html" %}
-{% block title %}Verfication{% endblock %}
+{% block title %}Verification{% endblock %}
 {% block content %}
 <html>
 <head>
@@ -14,9 +13,14 @@
 
     <h2>Verify Your Email</h2>
     <p>To complete your registration, please enter the code sent to {{ email }}.</p>
-    <form method="POST">
-      <input id="OTP_CODE" >
-      <button type="submit">Send Verification Email</button>
+    <form method="POST">  <label for="OTP_FORM">Enter Verification Code:</label>
+        <input type="text" id="OTP_FORM" name="OTP_FORM" required>
+        <input type="hidden" name="username" value="{{ username }}">  <input type="hidden" name="OTP_CODE" value="{{ OTP_CODE }}"> <input type="hidden" name="email" value="{{email}}">
+        <input type="hidden" name="password" value="{{password}}">
+        <button type="submit">Verify</button>
+        {% if error_message %}
+            <p style="color: red;">{{ error_message }}</p>
+        {% endif %}
     </form>
 </body>
 </html>
