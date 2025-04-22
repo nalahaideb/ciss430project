@@ -11,6 +11,22 @@ from datetime import datetime
 import pytz
 from app.backend_functions.exercise_backend import *
 from app.backend_functions.misc import *
+'''
+###########################################################
+############## WISHLIST, MARK AS NECESSARY ################
+###########################################################
+
+update plan []
+search plans []
+update days []
+"post" plans [] (make plans available for search)
+highlight current workouts on dashboard []
+
+
+###########################################################
+############## WISHLIST, MARK AS NECESSARY ################
+###########################################################
+'''
 @app.route('/')
 @app.route('/index')
 def index():
