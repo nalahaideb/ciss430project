@@ -1,71 +1,98 @@
 {% extends "base.html" %}
 {% block title %}Exercise Plans{% endblock %}
 {% block content %}
-<p>{{ now.strftime('%A, %B %d, %Y %I:%M:%S %p %Z%z') }}</p>
-<div style="display: flex;">
-    <div style="flex: 4; margin-right: 20px;">
-        <h1>Exercise Plans for {{ username }}</h1>
-        <form method="POST">
-            <ul>
-                {% for exercise in user_exercises %}
-                <li>
-                    <input type="checkbox" name="selected_exercises" value="{{ exercise.id }}">
-                    {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})
-                </li>
-                {% else %}
-                <li>No exercises available for your plan yet.</li>
-                {% endfor %}
-            </ul>
-            <button type="submit">Add to Plan</button>
-        </form>
-    </div>
-    <div style="flex: 2; margin-right: 40px;">
-        <h2>Your Exercises</h2>
-        <table style="width: 100%;">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Level</th>
-                    <th>Muscle Group</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if all_exercises %}
-                    {% for exercise in all_exercises %}
+    <p>{{ now.strftime('%A, %B %d, %Y %I:%M:%S %p %Z%z') }}</p>
+    <div style="display: flex;">
+        <div style="flex: 4; margin-right: 20px;">
+            <h1>Exercise Plans for {{ username }}</h1>
+            <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Day</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Select Exercises</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                        {% for day in days %}
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ day }}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">
+                                <div class="form-check">
+                                    {% for exercise in user_exercises %}
+                                    <input class="form-check-input" type="checkbox" name="selected_exercises_{{ day }}" value="{{ exercise.ename }}" id="exercise_{{ exercise.id }}_{{ day }}">
+                                    <label class="form-check-label" for="exercise_{{ exercise.id }}_{{ day }}">
+                                        {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})<br>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Add to Plan</button>
+            </form>
+
+            <h2>Your Exercises</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
                     <tr>
-                        <td>{{ exercise.name }}</td>
-                        <td>{{ exercise.level }}</td>
-                        <td>{{ exercise.muscle_group }}</td>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Muscle Group</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Equipment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if added_exercises %}
+                    {% for exercise in added_exercises %}
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ename }}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.etype }}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ebpart }}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.eequip }}</td>
                     </tr>
                     {% endfor %}
-                {% else %}
-                    <tr><td colspan="3">No exercises yet.</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-    <div style="flex: 1;">
-        <h2>Search for Plans</h2>
-        <div style="display: flex;">
-            <input type="text" id="plan_search" placeholder="Enter plan name">
-            <button id="plan_search_button">Search</button>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: left;">No exercises added to plan yet.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
-        <table style="width: 100%;">
-            <thead>
-                <tr>
-                    <th>Plan Name</th>
-                </tr>
-            </thead>
-            <tbody>
-              <!-- query returns table here -->
-                <tr><td>Plan A</td></tr>
-                <tr><td>Plan B</td></tr>
-                <tr><td>Plan C</td></tr>
-                <tr><td>Plan D</td></tr>
-                <tr><td>Plan E</td></tr>
-            </tbody>
-        </table>
+        <div style="flex: 1;">
+            <h2>Search for Plans</h2>
+            <div style="display: flex;">
+                <input type="text" id="plan_search" placeholder="Enter plan name">
+                <button id="plan_search_button" class="btn btn-secondary">Search</button>
+            </div>
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Plan Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plan A</td>
+                    </tr>
+                    <tr>
+                        <td>Plan B</td>
+                    </tr>
+                    <tr>
+                        <td>Plan C</td>
+                    </tr>
+                    <tr>
+                        <td>Plan D</td>
+                    </tr>
+                    <tr>
+                        <td>Plan E</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 {% endblock %}

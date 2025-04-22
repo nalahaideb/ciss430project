@@ -10,7 +10,7 @@ from app.email.emaillib import *
 from datetime import datetime
 import pytz
 from app.backend_functions.exercise_backend import *
-
+from app.backend_functions.misc import *
 @app.route('/')
 @app.route('/index')
 def index():
@@ -236,24 +236,42 @@ def cancel_friend_request_route(frid):
     else:
         flash("Failed to cancel friend request.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
+        
+#should probably have this confirm the user is registered before we enable them to log on to anything else
+@app.route('/verify', methods=['POST', 'GET'])
+def verify_user():
+    if request.method == 'POST':
+        if 'OTP_FORM' in request.form:
+            user = request.form.get('username')
+            otp_entered = request.form.get('OTP_FORM')
+            otp_code = request.form.get('OTP_CODE')
+            email = request.form.get('email')
+            password = request.form.get('password')
 
+            print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
 
-@app.route('/<username>/exercise_plan')
-@login_required
-def exercise_plan(username):
-    if current_user.username != username:
-        return redirect(url_for('login'))
+            if otp_entered == otp_code:
+                print("POST (OTP): user verified\n")
+                return redirect(url_for('dashboard', username=user))
+            else:
+                print("POST (OTP): Invalid OTP")
+                return render_template('verify.html', username=user, error_message="Invalid OTP. Please try again.", OTP_CODE=otp_code, email=email, password=password)  
+        else:
+            user = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            print("POST (Reg): USER INFO =", user, email, password)
 
-    now_utc = datetime.now(pytz.utc)
-    central_timezone = pytz.timezone('America/Chicago')
-    now_local = now_utc.astimezone(central_timezone)
-
-    #dummy data for now
-    exercises = [
-        {'id': 1, 'name': 'Push-ups', 'level': 'Beginner', 'muscle_group': 'Chest'},
-        {'id': 2, 'name': 'Squats', 'level': 'Beginner', 'muscle_group': 'Legs'},
-    ]
-    return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, exercises=exercises)
+            if user and email and password:
+                valid = verify_new_user(user, email)
+                otp = generate_OTP()
+                send_auth_email(email, user, otp) 
+                return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)
+            else:
+                print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
+                return render_template('register.html', error_message="Username or email already exists")
+    elif request.method == 'GET':
+        return render_template('register.html')
 
 @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
 @login_required
@@ -265,95 +283,79 @@ def exercise_list(username):
     default_equipment = list_equipment()
     ex_level = None
     name = None
+
     if request.method == 'POST':
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
-        print("!!!!!!!!!!!!SELECTIONS!!!!!!!!!!!!\n", muscle_groups, "\n\n", selected_equipment)
-        if len(muscle_groups) <= 0:
-            muscle_groups = list_muscles()
-        if len(selected_equipment) <= 0:
-            selected_equipment = default_equipment
-        #ill add this when i can implement it correctly
-        #name = request.form.get('search_field')
-        print("SELECTED EQUIPMENT", selected_equipment, type(selected_equipment))
         exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name)
+        session['muscle_groups'] = muscle_groups
+        session['ex_level'] = ex_level
+        session['selected_equipment'] = selected_equipment
+        return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
 
     return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
-        
+
+@app.route('/add_exercises_to_workout', methods=['POST'])
+@login_required
+def add_exercises_to_workout():
+    if request.method == 'POST':
+        selected_exercise_ids = request.form.getlist('selected_exercises')
+        print("Selected Exercise IDs:", selected_exercise_ids)
+
+        selected_exercises_list = []
+        if selected_exercise_ids:
+            selected_exercises_list = [int(eid) for eid in selected_exercise_ids]
+            selected_exercises_list = select_exercises_for_plan(selected_exercises_list)
+
+        session['added_exercises'] = selected_exercises_list 
+        # session['muscle_groups'] = request.form.getlist('muscle_group')
+        # session['ex_level'] = request.form.get('ex_level')
+        # session['selected_equipment'] = request.form.getlist('equip_group')
+        print("IN ADD_EX ROUTE, SEL_EX = ", selected_exercises_list)
+        return redirect(url_for('exercise_plan', username=current_user.username, added_exercises=selected_exercises_list))
+    return redirect(url_for('exercise_list', username=current_user.username))
+
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
-def view_function(username):
+def exercise_plan(username):
     if current_user.username != username:
         return redirect(url_for('login'))
 
     now_utc = datetime.now(pytz.utc)
-    current_timezone = pytz.timezone('America/Chicago')
-    now_local = now_utc.astimezone(current_timezone)
-    return render_template('exercise_plan.html', username=username, exercises=exercises, now=now_local)
+    central_timezone = pytz.timezone('America/Chicago')
+    now_local = now_utc.astimezone(central_timezone)
+    
+    added_exercises = session.get('added_exercises', []) # get the exercises from the session
+    muscle_groups = session.get('muscle_groups', [])
+    ex_level = session.get('ex_level', '')
+    selected_equipment = session.get('selected_equipment', [])
 
-#should probably have this confirm the user is registered before we enable them to log on to anything else
-@app.route('/verify', methods=['POST', 'GET'])
-def verify_user():
     if request.method == 'POST':
-        if 'OTP_FORM' in request.form:
-            # User has submitted the OTP form
-            user = request.form.get('username')
-            otp_entered = request.form.get('OTP_FORM')
-            otp_code = request.form.get('OTP_CODE')
-            email = request.form.get('email')
-            password = request.form.get('password')
+        #  Handle form submission from exercise_plan.html (if any)
+        #  For example, saving the plan to the database.
+        print("Form submitted from exercise_plan.html")
+        print(request.form)
+        return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, added_exercises=added_exercises)
 
-            print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
+    else:
+        print("GET request for exercise plan")
+        return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, added_exercises=added_exercises)
+    
+@app.route('/add_to_plan', methods=['POST'])
+@login_required
+def add_to_plan():
+    selected_exercises_names = request.form.getlist('selected_exercises') # changed to selected_exercises
+    print(selected_exercises_names)
+    # Get the exercise details from the database based on the names
+    selected_exercises_list = []
 
-            if otp_entered == otp_code:
-                print("POST (OTP): user verified\n")
-                return redirect(url_for('dashboard', username=user))  # Redirect to dashboard
-            else:
-                print("POST (OTP): Invalid OTP")
-                return render_template('verify.html', username=user, error_message="Invalid OTP. Please try again.", OTP_CODE=otp_code, email=email, password=password)  # Show verify again
-        else:
-            # User has submitted the initial registration form (username, email, password)
-            user = request.form.get('username')
-            email = request.form.get('email')
-            password = request.form.get('password')
-            print("POST (Reg): USER INFO =", user, email, password)
+    if selected_exercises_names:
+        for exercise_name in selected_exercises_names:
+            # Assuming you have a function to get exercise details by name
+            exercise_details = get_exercise_details_by_name(exercise_name) # you will need to create this function
+            if exercise_details:
+                selected_exercises_list.append(exercise_details)
 
-            if user and email and password:
-                valid = verify_new_user(user, email)
-                otp = generate_OTP()  # Generate OTP
-                send_auth_email(email, user, otp)  # Send OTP email #added otp
-                return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)  # Show OTP input form
-            else:
-                print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
-                return render_template('register.html', error_message="Username or email already exists")
-    elif request.method == 'GET':
-        return render_template('register.html')
-
-# @app.route('/verify', methods=['POST', 'GET'])
-# def verify_user():
-#     user = request.form.get('username')
-#     email = request.form.get('email')
-#     password = request.form.get('password')
-#     print("USER INFO =", user, email, password)
-#     #perform verification here
-#     OTP = generate_OTP()
-#     if not user or not email or not password:
-#         return "Error: Please fill in all fields.", 400
-#     if request.method == 'GET':
-#         OTP_ENTERED = request.form.get('OTP_FORM')
-#         if OTP_ENTERED == OTP:
-#             print("user verified\n")
-#             return redirect(url_for('dashboard', username=user))
-#     if request.method == 'POST':
-#         existing_user = None  
-#         existing_email = None 
-#         OTP = generate_OTP()
-#         valid = verify_new_user(user, email) #replace with bool check for email/user uniqueness, OTP and password conf
-#         if valid:
-#             send_auth_email(email, user)
-#             return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=OTP)
-#         else:
-#             return render_template('register.html')
-
-        
+    session['added_exercises'] = selected_exercises_list
+    return redirect(url_for('exercise_plan', username=current_user.username))

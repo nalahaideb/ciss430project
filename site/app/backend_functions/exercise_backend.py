@@ -40,11 +40,11 @@ def list_equipment():
         #i dont know why it always prefaces each i with a space after the first entry, but this is a quick fix
         if i[0] == ' ':
             i = i[1:]
-        i = "'" + i + "'"
+        #i = "'" + i + "'"
         ret.append(i)
         #equip_string += "'" + i + "',"
         #equip_string += "'%s'," % i
-    print("!!!!!!!!!!!!!!!!!!!EQUIP_ARR: ", ret)
+#    print("!!!!!!!!!!!!!!!!!!!EQUIP_ARR: ", ret)
     c.close()
     conn.close()
 
@@ -55,7 +55,6 @@ def get_exercises(muscle_groups, equipment, level, name):
     c = conn.cursor()
     muscle_string = ''
     equip_string = ''
-    print("GROUP TYPES", type(muscle_groups), type(equipment))
     if muscle_groups != None:
         for i in muscle_groups:
             muscle_string +="'%s'," % i
@@ -65,7 +64,7 @@ def get_exercises(muscle_groups, equipment, level, name):
             equip_string +="'%s'," % i
         equip_string = equip_string[:len(equip_string) - 1]
    
-    print("select * from Exercises where ebpart in (%s) and eequip in (%s);" % (muscle_string, equip_string))
+    # print("select * from Exercises where ebpart in (%s) and eequip in (%s);" % (muscle_string, equip_string))
     c.execute("select * from Exercises where ebpart in (%s) and eequip in (%s);" % (muscle_string, equip_string))
     results = c.fetchall()
     conn.close()
