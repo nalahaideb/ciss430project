@@ -5,36 +5,99 @@
     <div style="display: flex;">
         <div style="flex: 4; margin-right: 20px;">
             <h1>Exercise Plans for {{ username }}</h1>
-            <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <thead>
-                        <tr>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Day</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Select Exercises</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                        {% for day in days %}
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px;">{{ day }}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">
-                                <div class="form-check">
-                                    {% for exercise in user_exercises %}
-                                    <input class="form-check-input" type="checkbox" name="selected_exercises_{{ day }}" value="{{ exercise.ename }}" id="exercise_{{ exercise.id }}_{{ day }}">
-                                    <label class="form-check-label" for="exercise_{{ exercise.id }}_{{ day }}">
-                                        {{ exercise.name }} ({{ exercise.level }}, {{ exercise.muscle_group }})<br>
-                                    </label>
+            
+            <!-- Current plan days section -->
+            <h2>Your Plan Days</h2>
+            <div id="plan-days-container">
+                {% if user_plan_days %}
+                    {% for day in user_plan_days %}
+                    <div class="plan-day" id="day-{{ day.id }}">
+                        <h3>{{ day.name }}</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Exercise</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Details</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if day.exercises %}
+                                    {% for exercise in day.exercises %}
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ename }}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.level }}, {{ exercise.muscle_group }}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">
+                                            <button class="btn btn-danger btn-sm" onclick="removeExerciseFromDay('{{ day.id }}', '{{ exercise.id }}')">Remove</button>
+                                        </td>
+                                    </tr>
                                     {% endfor %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <button type="submit" class="btn btn-primary">Add to Plan</button>
-            </form>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" style="border: 1px solid #ddd; padding: 8px;">No exercises added to this day yet.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        <button class="btn btn-warning btn-sm" onclick="editDayName('{{ day.id }}')">Edit Name</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeDay('{{ day.id }}')">Remove Day</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No plan days created yet. Add your first day below!</p>
+                {% endif %}
+            </div>
 
+            <!-- Add new day section -->
+            <div id="add-day-container" style="margin: 20px 0;">
+                <h3>Add New Day</h3>
+                <form id="add-day-form" method="POST" action="{{ url_for('add_day') }}">
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <input type="text" name="day_name" placeholder="Day Name (e.g. 'Leg Day', 'Day 1', etc.)" style="flex: 3; padding: 8px; margin-right: 10px;" required>
+                        <button type="submit" class="btn btn-success" style="flex: 1;">Add Day</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add exercises to day section -->
+            <div id="add-exercises-container">
+                <h3>Add Exercises to Day</h3>
+                <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
+                    <div style="margin-bottom: 10px;">
+                        <label for="selected_day">Select Day:</label>
+                        <select name="selected_day" id="selected_day" required>
+                            <option value="">-- Select a Day --</option>
+                            {% if user_plan_days %}
+                                {% for day in user_plan_days %}
+                                <option value="{{ day.id }}">{{ day.name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="exercises-selector">
+                        <h4>Select Exercises to Add</h4>
+                        <div class="form-check">
+                            {% if added_exercises %}
+                                {% for exercise in added_exercises %}
+                                <div style="margin-bottom: 5px;">
+                                    <input class="form-check-input" type="checkbox" name="selected_exercises" value="{{ exercise.id }}" id="exercise_{{ exercise.id }}">
+                                    <label class="form-check-label" for="exercise_{{ exercise.id }}">
+                                        {{ exercise.ename }} ({{ exercise.etype }}, {{ exercise.ebpart }})
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No exercises available. Add exercises first.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Add to Plan</button>
+                </form>
+            </div>
+
+            <!-- Available exercises section -->
             <h2>Your Exercises</h2>
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                 <thead>
@@ -57,42 +120,116 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: left;">No exercises added to plan yet.</td>
+                        <td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: left;">No exercises added yet.</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+
+        <!-- Search plans sidebar -->
         <div style="flex: 1;">
             <h2>Search for Plans</h2>
-            <div style="display: flex;">
-                <input type="text" id="plan_search" placeholder="Enter plan name">
-                <button id="plan_search_button" class="btn btn-secondary">Search</button>
+            <div style="display: flex; margin-bottom: 10px;">
+                <input type="text" id="plan_search" placeholder="Enter plan name" style="flex: 3; padding: 5px; margin-right: 5px;">
+                <button id="plan_search_button" class="btn btn-secondary" style="flex: 1;">Search</button>
             </div>
-            <table style="width: 100%;">
+            <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
-                        <th>Plan Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Plan Name</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Plan A</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Plan A</td>
                     </tr>
                     <tr>
-                        <td>Plan B</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Plan B</td>
                     </tr>
                     <tr>
-                        <td>Plan C</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Plan C</td>
                     </tr>
                     <tr>
-                        <td>Plan D</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Plan D</td>
                     </tr>
                     <tr>
-                        <td>Plan E</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Plan E</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <!-- JavaScript for dynamic functionality -->
+    <script>
+        function removeExerciseFromDay(dayId, exerciseId) {
+            if (confirm('Are you sure you want to remove this exercise from the day?')) {
+                // Submit via AJAX or form to backend
+                fetch('{{ url_for("remove_exercise_from_day") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId,
+                        exercise_id: exerciseId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        // Refresh the page or update the UI
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function editDayName(dayId) {
+            const newName = prompt('Enter new name for this day:');
+            if (newName) {
+                // Submit via AJAX or form to backend
+                fetch('{{ url_for("edit_day_name") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId,
+                        new_name: newName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        // Refresh the page or update the UI
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function removeDay(dayId) {
+            if (confirm('Are you sure you want to remove this day and all its exercises?')) {
+                // Submit via AJAX or form to backend
+                fetch('{{ url_for("remove_day") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        // Refresh the page or update the UI
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
 {% endblock %}
