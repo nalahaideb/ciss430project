@@ -315,8 +315,8 @@ def verify_user():
                  user_obj = User.get_by_username(user)
                  if user_obj:
                      login_user(user_obj)
-                print("POST (OTP): user verified\n")
-                return redirect(url_for('dashboard', username=user))
+                     print("POST (OTP): user verified\n")
+                     return redirect(url_for('dashboard', username=user))
             else:
                 print("POST (OTP): Invalid OTP")
                 return render_template('verify.html', username=user, error_message="Invalid OTP. Please try again.", OTP_CODE=otp_code, email=email, password=password)  
