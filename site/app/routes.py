@@ -256,6 +256,8 @@ def cancel_friend_request_route(frid):
     else:
         flash("Failed to cancel friend request.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+
         
 #should probably have this confirm the user is registered before we enable them to log on to anything else
 @app.route('/verify', methods=['POST', 'GET'])
