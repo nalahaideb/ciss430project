@@ -1,6 +1,6 @@
 # file: routes.py
 from app import app
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.user_management.models import User
@@ -312,70 +312,57 @@ def exercise_list(username):
 
     return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
 
+# @app.route('/add_exercises_to_workout', methods=['POST'])
+# @login_required
+# def add_exercises_to_workout():
+#     if request.method == 'POST':
+#         selected_exercise_ids = request.form.getlist('selected_exercises')
+#         selected_exercises_list = []
+        
+#         if selected_exercise_ids:
+#             # Convert to integers and get full exercise data
+#             exercise_ids = [int(eid) for eid in selected_exercise_ids]
+#             selected_exercises_list = select_exercises_for_plan(exercise_ids)
+#             # Ensure we're storing complete exercise data
+#             session['added_exercises'] = [{
+#                 'id': ex.id,
+#                 'ename': ex.ename,
+#                 'level': ex.level,
+#                 'muscle_group': ex.muscle_group
+#             } for ex in selected_exercises_list] 
+#         # session['muscle_groups'] = request.form.getlist('muscle_group')
+#         # session['ex_level'] = request.form.get('ex_level')
+#         # session['selected_equipment'] = request.form.getlist('equip_group')
+#         print("IN ADD_EX ROUTE, SEL_EX = ", selected_exercises_list)
+#         return redirect(url_for('exercise_plan', username=current_user.username, added_exercises=selected_exercises_list))
+#     return redirect(url_for('exercise_list', username=current_user.username))
 @app.route('/add_exercises_to_workout', methods=['POST'])
 @login_required
 def add_exercises_to_workout():
     if request.method == 'POST':
         selected_exercise_ids = request.form.getlist('selected_exercises')
-        print("Selected Exercise IDs:", selected_exercise_ids)
-
         selected_exercises_list = []
+        
         if selected_exercise_ids:
-            selected_exercises_list = [int(eid) for eid in selected_exercise_ids]
-            selected_exercises_list = select_exercises_for_plan(selected_exercises_list)
-
-        session['added_exercises'] = selected_exercises_list 
-        # session['muscle_groups'] = request.form.getlist('muscle_group')
-        # session['ex_level'] = request.form.get('ex_level')
-        # session['selected_equipment'] = request.form.getlist('equip_group')
-        print("IN ADD_EX ROUTE, SEL_EX = ", selected_exercises_list)
-        return redirect(url_for('exercise_plan', username=current_user.username, added_exercises=selected_exercises_list))
+            exercise_ids = [int(eid) for eid in selected_exercise_ids]
+            exercises = select_exercises_for_plan(exercise_ids)
+            
+            # Check if exercises are already dictionaries
+            if exercises and isinstance(exercises[0], dict):
+                # Already in correct format
+                session['added_exercises'] = exercises
+            else:
+                # Convert objects to dictionaries if needed
+                session['added_exercises'] = [{
+                    'id': ex.id,
+                    'ename': ex.ename,
+                    'level': ex.level,
+                    'muscle_group': ex.muscle_group
+                } for ex in exercises]
+            
+            print("Stored exercises:", session['added_exercises'])
+        return redirect(url_for('exercise_plan', username=current_user.username))
     return redirect(url_for('exercise_list', username=current_user.username))
-
-# @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
-# @login_required
-# def exercise_plan(username):
-#     if current_user.username != username:
-#         return redirect(url_for('login'))
-
-#     now_utc = datetime.now(pytz.utc)
-#     central_timezone = pytz.timezone('America/Chicago')
-#     now_local = now_utc.astimezone(central_timezone)
-    
-#     added_exercises = session.get('added_exercises', []) # get the exercises from the session
-#     muscle_groups = session.get('muscle_groups', [])
-#     ex_level = session.get('ex_level', '')
-#     selected_equipment = session.get('selected_equipment', [])
-
-#     if request.method == 'POST':
-#         #  Handle form submission from exercise_plan.html (if any)
-#         #  For example, saving the plan to the database.
-#         print("Form submitted from exercise_plan.html")
-#         print(request.form)
-#         return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, added_exercises=added_exercises)
-
-#     else:
-#         print("GET request for exercise plan")
-#         return render_template('exercise_plan.html', user=current_user, now=now_local, username=username, added_exercises=added_exercises)
-    
-# @app.route('/add_to_plan', methods=['POST'])
-# @login_required
-# def add_to_plan():
-#     selected_exercises_names = request.form.getlist('selected_exercises') # changed to selected_exercises
-#     print(selected_exercises_names)
-#     # Get the exercise details from the database based on the names
-#     selected_exercises_list = []
-
-#     if selected_exercises_names:
-#         for exercise_name in selected_exercises_names:
-#             # Assuming you have a function to get exercise details by name
-#             exercise_details = get_exercise_details_by_name(exercise_name) # you will need to create this function
-#             if exercise_details:
-#                 selected_exercises_list.append(exercise_details)
-
-#     session['added_exercises'] = selected_exercises_list
-#     return redirect(url_for('exercise_plan', username=current_user.username))
-
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
 def exercise_plan(username):
@@ -386,9 +373,8 @@ def exercise_plan(username):
     central_timezone = pytz.timezone('America/Chicago')
     now_local = now_utc.astimezone(central_timezone)
     
-    added_exercises = session.get('added_exercises', [])  # get the exercises from the session
-    
-    # Get the user's plan days
+    added_exercises = session.get('added_exercises', [])
+
     user_plan_days = get_user_plan_days(current_user.id)
     
     return render_template('exercise_plan.html', 
@@ -408,7 +394,6 @@ def add_day():
             flash('Day name is required.')
             return redirect(url_for('exercise_plan', username=current_user.username))
         
-        # Add the day to the database
         success = add_plan_day(current_user.id, day_name)
         
         if success:
@@ -424,7 +409,10 @@ def add_to_plan():
     if request.method == 'POST':
         day_id = request.form.get('selected_day')
         selected_exercise_ids = request.form.getlist('selected_exercises')
+        print("SELECTED_EXERCISES", selected_exercise_ids)
+        selected_exercise_ids = [eid for eid in selected_exercise_ids if eid]
         
+        print("Day ID:", day_id)
         if not day_id:
             flash('Please select a day to add exercises to.')
             return redirect(url_for('exercise_plan', username=current_user.username))
@@ -442,7 +430,7 @@ def add_to_plan():
             flash('No exercises were added to your plan.')
             
         return redirect(url_for('exercise_plan', username=current_user.username))
-
+    
 @app.route('/remove_exercise_from_day', methods=['POST'])
 @login_required
 def remove_exercise_from_day():
@@ -454,12 +442,9 @@ def remove_exercise_from_day():
         if not day_id or not exercise_id:
             return jsonify({'success': False, 'message': 'Missing required parameters'})
         
-        # Verify that the day belongs to the current user
         day_owner = get_day_owner_id(day_id)
         if day_owner != current_user.id:
             return jsonify({'success': False, 'message': 'Unauthorized access'})
-        
-        # Remove the exercise from the day
         success = remove_exercise_from_plan_day(day_id, exercise_id)
         
         return jsonify({'success': success})
@@ -474,13 +459,9 @@ def edit_day_name():
         
         if not day_id or not new_name:
             return jsonify({'success': False, 'message': 'Missing required parameters'})
-        
-        # Verify that the day belongs to the current user
         day_owner = get_day_owner_id(day_id)
         if day_owner != current_user.id:
             return jsonify({'success': False, 'message': 'Unauthorized access'})
-        
-        # Update the day name
         success = update_plan_day_name(day_id, new_name)
         
         return jsonify({'success': success})
@@ -494,13 +475,9 @@ def remove_day():
         
         if not day_id:
             return jsonify({'success': False, 'message': 'Missing required parameter'})
-        
-        # Verify that the day belongs to the current user
         day_owner = get_day_owner_id(day_id)
         if day_owner != current_user.id:
             return jsonify({'success': False, 'message': 'Unauthorized access'})
-        
-        # Remove the day and all its exercises
         success = delete_plan_day(day_id)
         
         return jsonify({'success': success})

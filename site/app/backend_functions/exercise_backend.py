@@ -9,13 +9,14 @@ def connect():
         database='exercisedb',
         cursorclass=pymysql.cursors.DictCursor
     )
+
+#defaults to selecting all muscles if nothing is selected
 def list_muscles():
     conn = connect()
     c = conn.cursor()
     c.execute("SELECT GROUP_CONCAT(DISTINCT ebpart SEPARATOR ', ') AS ebpart FROM Exercises;")
     muscle_arr = c.fetchall()
     muscle_string = str(muscle_arr[0])
-    #print("MUSCLE STRING 1", muscle_string)
     muscle_string = muscle_string[11:len(muscle_string)-2]
     muscle_string = muscle_string.replace("'",'')
     muscle_string = muscle_string.replace('"','')
@@ -24,8 +25,8 @@ def list_muscles():
     for i in muscle_arr:
         i = i.replace(' ', '')
     return muscle_arr
-    
 
+#defaults to selecting all equipment if nothing is selected
 def list_equipment():
     conn = connect()
     c = conn.cursor()
@@ -84,50 +85,30 @@ def get_user_plan_days(user_id):
     try:
         conn = connect()
         cursor = conn.cursor()
-        # cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT main_pid FROM User
-            WHERE uid = %s
-        """, (user_id,))
+        cursor.execute("""SELECT main_pid FROM User WHERE uid = %s""", (user_id,))
         
         result = cursor.fetchone()
         if not result or not result['main_pid']:
             # If user has no main plan, try to get any plan they own
-            cursor.execute("""
-                SELECT pid FROM Exercise_Plan
-                WHERE uid = %s
-                ORDER BY creation_date DESC
-                LIMIT 1
-            """, (user_id,))
+            cursor.execute("""SELECT pid FROM Exercise_Plan WHERE uid = %s ORDER BY creation_date DESC LIMIT 1""", (user_id,))
             result = cursor.fetchone()
             
+            #broke boy dont wanna catch a bodyyyyy #baldisbasics #swag
             if not result:
-                # User has no plans at all
                 return []
             
             plan_id = result['pid']
-            
-            # Set this as their main plan
-            cursor.execute("""
-                UPDATE User
-                SET main_pid = %s
-                WHERE uid = %s
-            """, (plan_id, user_id))
+            cursor.execute("""UPDATE User SET main_pid = %s WHERE uid = %s""", (plan_id, user_id))
             conn.commit()
         else:
             plan_id = result['main_pid']
-        
-        # Get all days for this plan
-        cursor.execute("""
-            SELECT did as id, day_name as name, day_order
-            FROM Exercise_Plan_Day
-            WHERE pid = %s
-            ORDER BY day_order, day_name
-        """, (plan_id,))
+            
+        #get the days for d plan
+        cursor.execute("""SELECT did as id, day_name as name, day_order FROM Exercise_Plan_Day WHERE pid = %s ORDER BY day_order, day_name""", (plan_id,))
         
         days = cursor.fetchall()
         
-        # For each day, get its exercises
+        #get the exercises for the selected day
         for day in days:
             cursor.execute("""
                 SELECT e.eid as id, e.ename, e.etype as level, e.ebpart as muscle_group,
@@ -206,48 +187,40 @@ def add_plan_day(user_id, day_name):
         print(f"Error in add_plan_day: {e}")
         return False
 
-
 def add_exercises_to_day(day_id, exercise_ids):
-    """
-    Add exercises to a day in the user's plan
-    
-    Parameters:
-    day_id (int): The ID of the day
-    exercise_ids (list): A list of exercise IDs
-    
-    Returns:
-    int: Number of exercises successfully added
-    """
+    print("ADD EXERCISES", day_id, exercise_ids)
     try:
         conn = connect()
-        cursor = conn.cursor()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)  # Ensure dictionary cursor
         
-        # Get the highest exercise_order for this day
+        # Get max exercise order
         cursor.execute("""
-            SELECT MAX(exercise_order) FROM Exercise_Entry
+            SELECT MAX(exercise_order) as max_order FROM Exercise_Entry
             WHERE did = %s
         """, (day_id,))
-        
-        max_order = cursor.fetchone()[0]
+        result = cursor.fetchone()
+        max_order = result['max_order'] if result else None  # Access as dictionary
         next_order = 1 if max_order is None else max_order + 1
+        print("orders", max_order, next_order)
         
         added_count = 0
+        print("exerciseids", exercise_ids)
         
         for exercise_id in exercise_ids:
             try:
                 # Check if this exercise is already in this day
                 cursor.execute("""
-                    SELECT COUNT(*) FROM Exercise_Entry
+                    SELECT COUNT(*) as count FROM Exercise_Entry
                     WHERE did = %s AND eid = %s
-                """, (day_id, exercise_id))
-                
-                count = cursor.fetchone()[0]
+                    """, (day_id, exercise_id))
+                result = cursor.fetchone()
+                count = result['count']  # Access as dictionary
                 
                 if count == 0:
                     cursor.execute("""
                         INSERT INTO Exercise_Entry (did, eid, exercise_order, sets, reps)
                         VALUES (%s, %s, %s, 3, 10)
-                    """, (day_id, exercise_id, next_order))
+                        """, (day_id, exercise_id, next_order))
                     next_order += 1
                     added_count += 1
             except Exception as inner_e:
@@ -255,12 +228,13 @@ def add_exercises_to_day(day_id, exercise_ids):
                 continue
         
         conn.commit()
-        conn.close()
         return added_count
+        
     except Exception as e:
         print(f"Error in add_exercises_to_day: {e}")
         return 0
-
+    conn.close()
+            
 def get_day_owner_id(day_id):
     """
     Get the ID of the user who owns a day

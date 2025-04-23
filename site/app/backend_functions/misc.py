@@ -20,26 +20,51 @@ def add_user(user, email, password):
     c.execute("select ucid from User_Credentials where username = '%s';" % user)
     ucid = c.fetchone()
     c.execute("INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);" % (ucid, 'NONE', 'NONE', 'NONE'))
-
-def select_exercises_for_plan(exercises):
-    if len(exercises) <= 0:
-        no_ex = []
-        return no_ex
+    
+def select_exercises_for_plan(exercise_ids):
+    if not exercise_ids:
+        return []
+    
     conn = pymysql.connect(
         host='localhost',
         user='root',
         password='root',
         database='exercisedb',
         cursorclass=pymysql.cursors.DictCursor
-        )
-    c = conn.cursor()
-    ex_string = ''
-    #print("EXERCISES IN SELECT_EXERCISES_FOR_PLAN:",exercises)
-    for i in exercises:
-        ex_string += "%s," % i
-    #print("ex_string=",ex_string)
-    ex_string = ex_string[:len(ex_string) - 1]
-    c.execute("select * from Exercises where eid in (%s);" % ex_string)
-    ex_list = c.fetchall()
-    #print("ex_list = ", ex_list)
-    return ex_list
+    )
+    
+    try:
+        with conn.cursor() as c:
+            placeholders = ','.join(['%s'] * len(exercise_ids))
+            query = """
+                SELECT 
+                    eid as id,
+                    ename as name,
+                    etype as type,
+                    ebpart as muscle_group,
+                    eequip as equipment
+                FROM Exercises 
+                WHERE eid IN (%s)
+            """ % placeholders
+            
+            c.execute(query, tuple(exercise_ids))
+            
+            # Format results to match expected structure
+            exercises = []
+            for row in c.fetchall():
+                exercises.append({
+                    'id': row['id'],
+                    'ename': row['name'],
+                    'type': row['type'],
+                    'muscle_group': row['muscle_group'],
+                    'equipment': row['equipment'],
+                    'level': 'Intermediate'  
+                })
+            
+            return exercises
+            
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    conn.close()
+    return

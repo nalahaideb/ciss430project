@@ -61,73 +61,73 @@
 
             <!-- Add exercises to day section -->
             <div id="add-exercises-container">
-                <h3>Add Exercises to Day</h3>
-                <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
-                    <div style="margin-bottom: 10px;">
-                        <label for="selected_day">Select Day:</label>
-                        <select name="selected_day" id="selected_day" required>
-                            <option value="">-- Select a Day --</option>
-                            {% if user_plan_days %}
-                                {% for day in user_plan_days %}
-                                <option value="{{ day.id }}">{{ day.name }}</option>
-                                {% endfor %}
-                            {% endif %}
-                        </select>
-                    </div>
-
-                    <div class="exercises-selector">
-                        <h4>Select Exercises to Add</h4>
-                        <div class="form-check">
-                            {% if added_exercises %}
-                                {% for exercise in added_exercises %}
-                                <div style="margin-bottom: 5px;">
-                                    <input class="form-check-input" type="checkbox" name="selected_exercises" value="{{ exercise.id }}" id="exercise_{{ exercise.id }}">
-                                    <label class="form-check-label" for="exercise_{{ exercise.id }}">
-                                        {{ exercise.ename }} ({{ exercise.etype }}, {{ exercise.ebpart }})
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>No exercises available. Add exercises first.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Add to Plan</button>
-                </form>
-            </div>
-
-            <!-- Available exercises section -->
-            <h2>Your Exercises</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                <thead>
-                    <tr>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Name</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Muscle Group</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Equipment</th>
-                    </tr>
-                </thead>
-                <tbody>
+              <h3>Add Exercises to Day</h3>
+              <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
+                <div style="margin-bottom: 10px;">
+                  <label for="selected_day">Select Day:</label>
+                  <select name="selected_day" id="selected_day" class="form-control" required>
+                    <option value="">-- Select a Day --</option>
+                    {% if user_plan_days %}
+                    {% for day in user_plan_days %}
+                    <option value="{{ day.id }}">{{ day.name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                  </select>
+                </div>
+                <div class="exercises-selector">
+                  <h4>Select Exercises to Add</h4>
+                  <div class="form-check" id="exercise-checkboxes">
                     {% if added_exercises %}
                     {% for exercise in added_exercises %}
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ename }}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.etype }}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ebpart }}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.eequip }}</td>
-                    </tr>
+                    <div style="margin-bottom: 5px;">
+                      <input class="form-check-input" type="checkbox" 
+                             name="selected_exercises" 
+                             value="{{ exercise['id'] }}" 
+                             id="exercise_{{ exercise['id'] }}">
+                      <label class="form-check-label" for="exercise_{{ exercise['id'] }}">
+                        {{ exercise['ename'] }} ({{ exercise['level'] }}, {{ exercise['muscle_group'] }})
+                      </label>
+                    </div>
                     {% endfor %}
                     {% else %}
-                    <tr>
-                        <td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: left;">No exercises added yet.</td>
-                    </tr>
+                    <p id="no-exercises-msg">No exercises available. Add exercises first.</p>
                     {% endif %}
-                </tbody>
-            </table>
-        </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px;" id="plan-submit-btn">Add to Plan</button>
+              </form>
+            </div>
 
-        <!-- Search plans sidebar -->
+            <script>
+              // Add this JavaScript to inspect all checkbox values before submission
+              document.getElementById('plan-submit-btn').addEventListener('click', function(e) {
+                  e.preventDefault();
+                  
+                  const selectedDay = document.getElementById('selected_day').value;
+                  const checkboxes = document.querySelectorAll('input[name="selected_exercises"]:checked');
+                  
+                  console.log('Selected Day ID:', selectedDay);
+                  console.log('Number of checked exercises:', checkboxes.length);
+                  
+                  // Detailed logging of EVERY checkbox
+                  console.log('--- ALL CHECKBOXES ---');
+                  document.querySelectorAll('input[name="selected_exercises"]').forEach(function(cb) {
+                      console.log(`Checkbox ID=${cb.id}, value="${cb.value}", checked=${cb.checked}`);
+                  });
+                  
+                  console.log('--- CHECKED CHECKBOXES ---');
+                  checkboxes.forEach(function(cb) {
+                      console.log(`Checked box ID=${cb.id}, value="${cb.value}"`);
+                  });
+                  
+                  // Only if we have valid selections, submit the form
+                  if (selectedDay && checkboxes.length > 0) {
+                      document.getElementById('add-to-plan-form').submit();
+                  } else {
+                      alert('Please select both a day and at least one exercise.');
+                  }
+              });
+            </script>
         <div style="flex: 1;">
             <h2>Search for Plans</h2>
             <div style="display: flex; margin-bottom: 10px;">
