@@ -3,11 +3,24 @@
 {% block title %}Messages{% endblock %}
 
 {% block content %}
+<style>
+    .scrollable-panel {
+        height: 600px;
+        overflow-y: auto;
+    }
+
+    .scrollable-messages {
+        height: 400px;
+        overflow-y: auto;
+        padding-right: 10px; /* Prevent hidden scrollbar content */
+    }
+</style>
+
 <h2 class="mb-4">Messages</h2>
 <div class="row">
     <!-- Sidebar of Messaged Friends -->
-    <div class="col-md-4" style="max-height: 600px; overflow-y: auto;">
-        <div class="card">
+    <div class="col-md-4">
+        <div class="card scrollable-panel">
             <div class="card-header">Conversations</div>
             <ul class="list-group list-group-flush">
                 {% for friend in friends %}
@@ -34,7 +47,7 @@
                     Select a conversation
                 {% endif %}
             </div>
-            <div class="card-body" style="height: 400px; overflow-y: auto;">
+            <div class="card-body scrollable-messages">
                 {% if selected_user %}
                     {% set visible_messages = thread | selectattr("message_text", "ne", "[conversation started]") | list %}
                     {% if visible_messages %}
@@ -60,7 +73,6 @@
                 <div class="card-footer">
                     <form method="POST" class="d-flex">
                         <input type="text" name="message" class="form-control mr-2" placeholder="Type a message..." required autocomplete="off">
-
                         <button type="submit" class="btn btn-primary">Send</button>
                     </form>
                 </div>
@@ -69,4 +81,5 @@
     </div>
 </div>
 {% endblock %}
+
 
