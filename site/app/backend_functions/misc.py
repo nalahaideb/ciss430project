@@ -1,38 +1,28 @@
 #from app import db
 import pymysql.cursors
 from werkzeug.security import generate_password_hash
-
-def get_db_connection():
-    return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-        )
+from app.db import get_db_connection as connect
 
 def add_user(user, email, password):
-    conn = get_db_connection()
-    phash = generate_password_hash(password)
+    conn = connect()
     c = conn.cursor()
+    phash = generate_password_hash(password)
     c.execute("insert into User_Credentials (username, email, phash) values (%s, %s, %s);" % (username, email, phash))
     #will update this later, right now everyone has no names or bio
     c.execute("select ucid from User_Credentials where username = '%s';" % user)
     ucid = c.fetchone()
-    c.execute("INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);" % (ucid, 'NONE', 'NONE', 'NONE'))
-    
+    if len(ucid) <= 0:
+        c.execute("INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);" % (ucid, 'NONE', 'NONE', 'NONE'))
+    else:
+        print("NONUNIQUE EMAIL, NOT INSERTING")
+    return
+
 def select_exercises_for_plan(exercise_ids):
     if not exercise_ids:
         return []
     
-    conn = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-    )
-    
+    conn = connect()
+
     try:
         with conn.cursor() as c:
             placeholders = ','.join(['%s'] * len(exercise_ids))
