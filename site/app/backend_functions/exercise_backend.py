@@ -350,5 +350,4 @@ def create_default_plan(user):
         print(f"Error creating default plan: {e}")
         conn.rollback()
         return None
-    finally:
-        conn.close()
+    conn.close()

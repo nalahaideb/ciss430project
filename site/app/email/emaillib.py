@@ -7,12 +7,11 @@ from email.mime.base import MIMEBase
 from email import encoders
 import datetime
 import pymysql
-#from google_app_config import GMAIL, TO, GOOGLE_APP_PASSWORD
-#from emailserver import sendgmail
-#from google_app_config import GMAIL, TO, GOOGLE_APP_PASSWORD
+from app.db import get_db_connection as connect
 GMAIL = 'mysqlpal@gmail.com'
 GOOGLE_APP_PASSWORD = 'wjmm zspw uwgu maoq'
-test_img = '/home/student/Desktop/ciss430/project/site/app/email/moustard.webp'
+testimgdir = str(os.getcwd()) + '/moustard.webp'
+test_img = testimgdir
 def sendgmail(to_,
               from_=GMAIL,
               subject='[NO SUBJECT]',
@@ -66,13 +65,7 @@ def generate_OTP():
 
 #runs two simple queries to determine if a user already has been registered with either the username or the email, both being unique
 def verify_new_user(user, email):
-    conn = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-        )
+    conn = conn()
     c = conn.cursor()
     print("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
     c.execute("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
@@ -82,7 +75,7 @@ def verify_new_user(user, email):
     
     c.close()
     conn.close()
-    print("ISEMAIL", is_email, "ISUSER", is_user)
+    # print("ISEMAIL", is_email, "ISUSER", is_user)
     return True
 
 def send_auth_email(useremail, username, otp):
