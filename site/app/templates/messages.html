@@ -47,7 +47,7 @@
                     Select a conversation
                 {% endif %}
             </div>
-            <div class="card-body scrollable-messages">
+            <div id="messageThread" class="card-body scrollable-messages">
                 {% if selected_user %}
                     {% set visible_messages = thread | selectattr("message_text", "ne", "[conversation started]") | list %}
                     {% if visible_messages %}
@@ -80,6 +80,17 @@
         </div>
     </div>
 </div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+        const thread = document.getElementById('messageThread');
+        if (thread) {
+            thread.scrollTop = thread.scrollHeight;
+        }
+    });
+</script>
+
+
 {% endblock %}
 
 
