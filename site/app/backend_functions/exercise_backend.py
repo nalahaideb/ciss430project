@@ -281,13 +281,7 @@ def delete_plan_day(day_id):
         return False
 
 def get_main_plan_with_days(user_id):
-    conn = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-    )
+    conn = connect()
     
     try:
         with conn.cursor() as cursor:
