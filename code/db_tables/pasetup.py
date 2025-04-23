@@ -4,7 +4,7 @@ import csv
 
 def get_connection():
     return pymysql.connect(
-        host='mysql.mysql.pythonanywhere-services.com',
+        host='mysqlpal.mysql.pythonanywhere-services.com',
         user='mysqlpal',
         password='PASICK123*',
         database='mysqlpal$exercisedb',
