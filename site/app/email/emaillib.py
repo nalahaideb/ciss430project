@@ -10,8 +10,8 @@ import pymysql
 from app.db import get_db_connection as connect
 GMAIL = 'mysqlpal@gmail.com'
 GOOGLE_APP_PASSWORD = 'wjmm zspw uwgu maoq'
-testimgdir = str(os.getcwd()) + '/moustard.webp'
-test_img = testimgdir
+# testimgdir = str(os.getcwd()) + '/moustard.webp'
+# test_img = testimgdir
 def sendgmail(to_,
               from_=GMAIL,
               subject='[NO SUBJECT]',
