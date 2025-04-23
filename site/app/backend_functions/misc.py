@@ -16,8 +16,10 @@ def add_user(user, email, password):
     if len(ucid) <= 0:
         print("INSERTING USER: INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);" % (ucid, 'NONE', 'NONE', 'NONE'))
         c.execute("INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);" % (ucid, 'NONE', 'NONE', 'NONE'))
+        #return True
     else:
         print("NONUNIQUE EMAIL, NOT INSERTING")
+        #return False
     return
 
 def select_exercises_for_plan(exercise_ids):

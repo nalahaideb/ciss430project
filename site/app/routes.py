@@ -301,7 +301,6 @@ def messages(username):
 @app.route('/verify', methods=['POST', 'GET'])
 def verify_user():
     if request.method == 'POST':
-        # If user submitted the OTP form
         if 'OTP_FORM' in request.form:
             user = request.form.get('username')
             otp_entered = request.form.get('OTP_FORM')
@@ -312,6 +311,7 @@ def verify_user():
             print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
 
             if otp_entered == otp_code:
+                add_user(user, email, password)
                 user_obj = User.get_by_username(user)
                 if user_obj:
                     login_user(user_obj)
