@@ -1,4 +1,4 @@
-use exercisedb;
+use mysqlpal$$exercisedb;
 
 create table User_Credentials (
 ucid INT AUTO_INCREMENT,
