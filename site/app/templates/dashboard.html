@@ -1,78 +1,55 @@
-<!--dashboard.html-->
+<!-- dashboard.html -->
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-md-3">
-        <a href="{{ url_for('profile', username=current_user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Profile</h5>
-                    <p class="card-text">View your profile</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('exercise_plan', username = current_user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Exercise Plans</h5>
-                    <p class="card-text">View/Manage your plans</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="#" class="text-decoration-none">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Progress</h5>
-                    <p class="card-text">Track your progress</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('friends', username = current_user.username) }}" class="text-decoration-none">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Friends</h5>
-                    <p class="card-text">Connect with others</p>
-                </div>
-            </div>
-        </a>
-    </div>
+    <!-- Existing dashboard cards... -->
 </div>
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
-            <div class="card-header">Today's Exercises</div>
+            <div class="card-header">
+                {% if plan %}
+                    {{ plan.plan_name }} - Day {{ plan.current_day }} of {{ plan.day_count }}
+                {% else %}
+                    Today's Exercises
+                {% endif %}
+            </div>
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Exercise</th>
                             <th>Sets</th>
-                            <th>Reps</th>
+                            <th>Reps/Duration</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Push-ups</td>
-                            <td>3</td>
-                            <td>12</td>
-                        </tr>
-                        <tr>
-                            <td>Squats</td>
-                            <td>4</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Plank</td>
-                            <td>3</td>
-                            <td>60s</td>
-                        </tr>
+                        {% if plan and plan.exercises %}
+                            {% for exercise in plan.exercises %}
+                            <tr>
+                                <td>{{ exercise.ename }}</td>
+                                <td>{{ exercise.sets }}</td>
+                                <td>
+                                    {% if exercise.duration %}
+                                        {{ exercise.duration }}s
+                                    {% else %}
+                                        {{ exercise.reps }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    {% if plan %}
+                                        Rest day - no exercises scheduled!
+                                    {% else %}
+                                        No active plan. Create one in Exercise Plans!
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -80,13 +57,45 @@
     </div>
     <div class="col-md-6">
         <div class="card mb-4">
-            <div class="card-header">Progress Toward Goal</div>
+            <div class="card-header">Plan Progress</div>
             <div class="card-body">
-                <div style="height: 300px; background-color: #eee; display: flex; align-items: center; justify-content: center;">
-                    <em>[Progress Chart Here]</em>
+                {% if plan %}
+                <div class="progress" style="height: 30px;">
+                    <div class="progress-bar bg-success" 
+                         role="progressbar" 
+                         style="width: {{ (plan.current_day / plan.day_count * 100)|round }}%"
+                         aria-valuenow="{{ plan.current_day }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="{{ plan.day_count }}">
+                        Day {{ plan.current_day }} / {{ plan.day_count }}
+                    </div>
                 </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Plan started on {{ plan.creation_date.strftime('%b %d, %Y') }}<br>
+                        Current cycle: {{ (plan.current_day / plan.day_count * 100)|round }}% complete
+                    </small>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-dumbbell fa-3x mb-3"></i>
+                    <p>No active workout plan selected</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
+<div class="alert alert-info">
+    {% if user.main_pid %}Current Plan: {{ user.main_plan.plan_name }} 
+    (created {{ user.main_plan.creation_date.strftime('%b %d, %Y') }})
+    {% else %}
+        <form method="POST" action="{{ url_for('create_plan') }}">
+            <p>No workout plan exists. Create your first plan:</p>
+            <button type="submit" class="btn btn-success">
+                Create New Workout Plan
+            </button>
+        </form>
+    {% endif %}
 </div>
 {% endblock %}

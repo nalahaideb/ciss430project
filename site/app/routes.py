@@ -16,12 +16,16 @@ from app.backend_functions.misc import *
 ############## WISHLIST, MARK AS NECESSARY ################
 ###########################################################
 
-update plan []
+update plan [x]
 search plans []
-update days []
+update days [x]
 "post" plans [] (make plans available for search)
 highlight current workouts on dashboard []
 
+potential:
+password reset []
+reordering of days []
+reordering of exercises []
 
 ###########################################################
 ############## WISHLIST, MARK AS NECESSARY ################
@@ -70,7 +74,18 @@ def logout():
 def dashboard(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    return render_template('dashboard.html', user=current_user)
+    
+    plan = get_main_plan_with_days(current_user.id)
+    
+    return render_template('dashboard.html', 
+                         user=current_user,
+                         plan=plan)
+# @app.route('/<username>/dashboard')
+# @login_required
+# def dashboard(username):
+#     if current_user.username != username:
+#         return redirect(url_for('login'))
+#     return render_template('dashboard.html', user=current_user)
 
 @app.route('/<username>/profile')
 @login_required
@@ -312,30 +327,6 @@ def exercise_list(username):
 
     return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
 
-# @app.route('/add_exercises_to_workout', methods=['POST'])
-# @login_required
-# def add_exercises_to_workout():
-#     if request.method == 'POST':
-#         selected_exercise_ids = request.form.getlist('selected_exercises')
-#         selected_exercises_list = []
-        
-#         if selected_exercise_ids:
-#             # Convert to integers and get full exercise data
-#             exercise_ids = [int(eid) for eid in selected_exercise_ids]
-#             selected_exercises_list = select_exercises_for_plan(exercise_ids)
-#             # Ensure we're storing complete exercise data
-#             session['added_exercises'] = [{
-#                 'id': ex.id,
-#                 'ename': ex.ename,
-#                 'level': ex.level,
-#                 'muscle_group': ex.muscle_group
-#             } for ex in selected_exercises_list] 
-#         # session['muscle_groups'] = request.form.getlist('muscle_group')
-#         # session['ex_level'] = request.form.get('ex_level')
-#         # session['selected_equipment'] = request.form.getlist('equip_group')
-#         print("IN ADD_EX ROUTE, SEL_EX = ", selected_exercises_list)
-#         return redirect(url_for('exercise_plan', username=current_user.username, added_exercises=selected_exercises_list))
-#     return redirect(url_for('exercise_list', username=current_user.username))
 @app.route('/add_exercises_to_workout', methods=['POST'])
 @login_required
 def add_exercises_to_workout():
@@ -394,15 +385,27 @@ def add_day():
             flash('Day name is required.')
             return redirect(url_for('exercise_plan', username=current_user.username))
         
+        # Add the day to the database
         success = add_plan_day(current_user.id, day_name)
         
         if success:
+            # Update plan modification time
+            conn = connect()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE Exercise_Plan 
+                SET creation_date = NOW() 
+                WHERE pid = (SELECT main_pid FROM User WHERE uid = %s)
+            """, (current_user.id,))
+            conn.commit()
+            conn.close()
+            
             flash(f'Day "{day_name}" added successfully.')
         else:
             flash('Failed to add day.')
             
         return redirect(url_for('exercise_plan', username=current_user.username))
-
+    
 @app.route('/add_to_plan', methods=['POST'])
 @login_required
 def add_to_plan():
@@ -481,3 +484,13 @@ def remove_day():
         success = delete_plan_day(day_id)
         
         return jsonify({'success': success})
+
+@app.route('/create_plan', methods=['POST'])
+@login_required
+def create_plan():
+    plan_id = create_default_plan(current_user.id)
+    if plan_id:
+        flash('New workout plan created successfully!')
+    else:
+        flash('Failed to create plan')
+    return redirect(url_for('exercise_plan', username=current_user.username))

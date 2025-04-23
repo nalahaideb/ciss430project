@@ -1,5 +1,6 @@
 #import app.db
 import pymysql.cursors
+from datetime import datetime
 #temporarily until i figure out how to PROPERLY FUCKIN IMPORT db.py
 def connect():
     return pymysql.connect(
@@ -351,3 +352,91 @@ def delete_plan_day(day_id):
     except Exception as e:
         print(f"Error in delete_plan_day: {e}")
         return False
+
+def get_main_plan_with_days(user_id):
+    """Get user's main plan with day count and exercises"""
+    conn = pymysql.connect(
+        host='localhost',
+        user='root',
+        password='root',
+        database='exercisedb',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+    
+    try:
+        with conn.cursor() as cursor:
+            # Get main plan ID
+            cursor.execute("""
+                SELECT main_pid FROM User WHERE uid = %s
+            """, (user_id,))
+            result = cursor.fetchone()
+            if not result or not result['main_pid']:
+                return None
+
+            # Get plan details and days
+            cursor.execute("""
+                SELECT 
+                    p.pid,
+                    p.plan_name,
+                    p.creation_date,
+                    COUNT(d.did) as day_count,
+                    GROUP_CONCAT(d.day_order ORDER BY d.day_order) AS day_orders
+                FROM Exercise_Plan p
+                LEFT JOIN Exercise_Plan_Day d ON p.pid = d.pid
+                WHERE p.pid = %s
+                GROUP BY p.pid
+            """, (result['main_pid'],))
+            
+            plan = cursor.fetchone()
+            if not plan:
+                return None
+
+            # Calculate current day
+            creation_date = plan['creation_date']
+            days_since_creation = (datetime.now() - creation_date).days
+            plan['current_day'] = (days_since_creation % plan['day_count']) + 1 if plan['day_count'] > 0 else 0
+
+            # Get today's exercises
+            if plan['current_day'] > 0:
+                cursor.execute("""
+                    SELECT e.ename, epe.sets, epe.reps, epe.duration
+                    FROM Exercise_Entry epe
+                    JOIN Exercises e ON epe.eid = e.eid
+                    JOIN Exercise_Plan_Day d ON epe.did = d.did
+                    WHERE d.pid = %s AND d.day_order = %s
+                    ORDER BY epe.exercise_order
+                """, (plan['pid'], plan['current_day']))
+                plan['exercises'] = cursor.fetchall()
+            else:
+                plan['exercises'] = []
+
+            return plan
+            
+    except Exception as e:
+        print(f"Database error: {e}")
+        return None
+    conn.close()
+    return
+
+def create_default_plan(user):
+    """Create a new default plan for a user"""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO Exercise_Plan (uid, plan_name)
+                VALUES (%s, 'My Workout Plan')
+            """, (user.id,))
+            plan_id = cursor.lastrowid
+            
+            # Update the user model directly
+            user.set_main_plan(plan_id)
+            
+            conn.commit()
+            return plan_id
+    except Exception as e:
+        print(f"Error creating default plan: {e}")
+        conn.rollback()
+        return None
+    finally:
+        conn.close()

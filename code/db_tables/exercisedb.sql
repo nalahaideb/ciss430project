@@ -96,11 +96,10 @@ foreign key (did) references Exercise_Plan_Day(did) on delete CASCADE,
 foreign key (eid) references Exercises(eid)
 )engine=innodb;
 
-
 alter table User
 add column main_pid INT,
 add foreign key (main_pid) references Exercise_Plan(pid) on delete set NULL;
-
+ALTER TABLE Exercise_Plan MODIFY plan_name VARCHAR(100) NOT NULL DEFAULT 'My Workout Plan';
 
 -- test user creation
 insert into User_Credentials(username, email, phash)
