@@ -65,7 +65,7 @@ def generate_OTP():
 
 #runs two simple queries to determine if a user already has been registered with either the username or the email, both being unique
 def verify_new_user(user, email):
-    conn = conn()
+    conn = connect()
     c = conn.cursor()
     print("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
     c.execute("SELECT email FROM User_Credentials WHERE email = '%s';" % email)
