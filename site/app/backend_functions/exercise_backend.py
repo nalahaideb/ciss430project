@@ -11,6 +11,15 @@ def connect():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+#def connect():
+#    return pymysql.connect(
+#        host='mysqlpal.mysql.pythonanywhere-services.com',
+#        user='mysqlpal',
+#        password='PASICK123*',
+#        database='mysqlpal$exercisedb',
+#        cursorclass=pymysql.cursors.DictCursor
+#    )
+
 #defaults to selecting all muscles if nothing is selected
 def list_muscles():
     conn = connect()
