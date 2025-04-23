@@ -20,7 +20,10 @@ update plan [x]
 search plans []
 update days [x]
 "post" plans [] (make plans available for search)
-highlight current workouts on dashboard []
+highlight current workouts on dashboard [x]
+add exercises to db []
+progress page []
+progress graph on dashboard for current exercises []
 
 potential:
 password reset []
@@ -80,12 +83,6 @@ def dashboard(username):
     return render_template('dashboard.html', 
                          user=current_user,
                          plan=plan)
-# @app.route('/<username>/dashboard')
-# @login_required
-# def dashboard(username):
-#     if current_user.username != username:
-#         return redirect(url_for('login'))
-#     return render_template('dashboard.html', user=current_user)
 
 @app.route('/<username>/profile')
 @login_required
@@ -156,8 +153,6 @@ def friends(username):
         return redirect(url_for('login'))
 
     uid = current_user.id
-
-    # Handle form search: redirect to clean GET
     if request.method == 'POST':
         search = request.form.get('search', '')
         return redirect(url_for(
@@ -167,8 +162,6 @@ def friends(username):
             page_friends=1,
             page_users=1
         ))
-
-    # Pull query and page states
     search_query = request.args.get('search', '')
     page_friends = int(request.args.get('page_friends', 1))
     page_users = int(request.args.get('page_users', 1))
@@ -176,13 +169,9 @@ def friends(username):
     LIMIT = 10
     offset_friends = (page_friends - 1) * LIMIT
     offset_users = (page_users - 1) * LIMIT
-
-    # Friends list
     friends = get_friends(uid, limit=LIMIT + 1, offset=offset_friends)
     has_more_friends = len(friends) > LIMIT
     friends = friends[:LIMIT]
-
-    # Right-side list: mutual friends or full user search
     if search_query:
         users = search_users(search_query, exclude_uid=uid, limit=LIMIT + 1, offset=offset_users)
         right_header = "Users"
@@ -337,13 +326,9 @@ def add_exercises_to_workout():
         if selected_exercise_ids:
             exercise_ids = [int(eid) for eid in selected_exercise_ids]
             exercises = select_exercises_for_plan(exercise_ids)
-            
-            # Check if exercises are already dictionaries
             if exercises and isinstance(exercises[0], dict):
-                # Already in correct format
                 session['added_exercises'] = exercises
             else:
-                # Convert objects to dictionaries if needed
                 session['added_exercises'] = [{
                     'id': ex.id,
                     'ename': ex.ename,
@@ -351,9 +336,10 @@ def add_exercises_to_workout():
                     'muscle_group': ex.muscle_group
                 } for ex in exercises]
             
-            print("Stored exercises:", session['added_exercises'])
+        #print("Stored exercises:", session['added_exercises'])
         return redirect(url_for('exercise_plan', username=current_user.username))
     return redirect(url_for('exercise_list', username=current_user.username))
+
 @app.route('/<username>/exercise_plan', methods=['GET', 'POST'])
 @login_required
 def exercise_plan(username):
@@ -384,12 +370,9 @@ def add_day():
         if not day_name:
             flash('Day name is required.')
             return redirect(url_for('exercise_plan', username=current_user.username))
-        
-        # Add the day to the database
         success = add_plan_day(current_user.id, day_name)
         
         if success:
-            # Update plan modification time
             conn = connect()
             cursor = conn.cursor()
             cursor.execute("""
@@ -423,8 +406,6 @@ def add_to_plan():
         if not selected_exercise_ids:
             flash('Please select at least one exercise to add.')
             return redirect(url_for('exercise_plan', username=current_user.username))
-        
-        # Add the exercises to the day
         added_count = add_exercises_to_day(day_id, selected_exercise_ids)
         
         if added_count > 0:
@@ -494,3 +475,96 @@ def create_plan():
     else:
         flash('Failed to create plan')
     return redirect(url_for('exercise_plan', username=current_user.username))
+
+@app.route('/get_plan_days/<int:plan_id>')
+@login_required
+def get_plan_days(plan_id):
+    """Get days for selected plan"""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT did, day_name FROM Exercise_Plan_Day 
+                WHERE pid = %s ORDER BY day_order
+            """, (plan_id,))
+            return jsonify(cursor.fetchall())
+    finally:
+        conn.close()
+
+@app.route('/get_day_exercises/<int:day_id>')
+@login_required
+def get_day_exercises(day_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT epe.entry_id, e.ename 
+                FROM Exercise_Entry epe
+                JOIN Exercises e ON epe.eid = e.eid
+                WHERE epe.did = %s
+                ORDER BY epe.exercise_order
+            """, (day_id,))
+            return jsonify(cursor.fetchall())
+    finally:
+        conn.close()
+
+@app.route('/get_exercise_details/<int:entry_id>')
+@login_required
+def get_exercise_details(entry_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT sets, reps FROM Exercise_Entry 
+                WHERE entry_id = %s
+            """, (entry_id,))
+            return jsonify(cursor.fetchone())
+    finally:
+        conn.close()
+
+@app.route('/get_progress_history/<int:entry_id>')
+@login_required
+def get_progress_history(entry_id):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT sets_completed, reps_completed, weight_used, notes, recorded_at
+                FROM Exercise_Progress
+                WHERE entry_id = %s
+                ORDER BY recorded_at DESC
+            """, (entry_id,))
+            return jsonify(cursor.fetchall())
+    finally:
+        conn.close()
+
+@app.route('/save_progress/<int:entry_id>', methods=['POST'])
+@login_required
+def save_progress(entry_id):
+    data = request.json
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO Exercise_Progress 
+                (entry_id, sets_completed, reps_completed, weight_used, notes)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (entry_id, data['sets_completed'], data['reps_completed'], 
+                 data.get('weight_used'), data.get('notes')))
+            conn.commit()
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/<username>/progress')
+@login_required
+def progress(username):
+    if current_user.username != username:
+        return redirect(url_for('login'))
+    plan = get_main_plan_with_days(current_user.id)
+    
+    return render_template('progress.html', 
+                         user=current_user,
+                         plan=plan)

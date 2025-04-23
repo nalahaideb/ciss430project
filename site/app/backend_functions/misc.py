@@ -48,8 +48,6 @@ def select_exercises_for_plan(exercise_ids):
             """ % placeholders
             
             c.execute(query, tuple(exercise_ids))
-            
-            # Format results to match expected structure
             exercises = []
             for row in c.fetchall():
                 exercises.append({

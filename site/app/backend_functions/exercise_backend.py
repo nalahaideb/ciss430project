@@ -74,15 +74,6 @@ def get_exercises(muscle_groups, equipment, level, name):
     return results
 
 def get_user_plan_days(user_id):
-    """
-    Get all exercise plan days for a user's active plan
-    
-    Parameters:
-    user_id (int): The ID of the user
-    
-    Returns:
-    list: A list of day objects, each containing id, name, and exercises
-    """
     try:
         conn = connect()
         cursor = conn.cursor()
@@ -90,7 +81,7 @@ def get_user_plan_days(user_id):
         
         result = cursor.fetchone()
         if not result or not result['main_pid']:
-            # If user has no main plan, try to get any plan they own
+            #find dis muhfucka a plan STAT
             cursor.execute("""SELECT pid FROM Exercise_Plan WHERE uid = %s ORDER BY creation_date DESC LIMIT 1""", (user_id,))
             result = cursor.fetchone()
             
@@ -129,18 +120,8 @@ def get_user_plan_days(user_id):
         return []
 
 def add_plan_day(user_id, day_name):
-    """
-    Add a new day to the user's exercise plan
-    
-    Parameters:
-    user_id (int): The ID of the user
-    day_name (str): The name of the day
-    
-    Returns:
-    bool: True if successful, False otherwise
-    """
     try:
-        conn = connect()  # Use your existing connect function
+        conn = connect()
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -165,14 +146,12 @@ def add_plan_day(user_id, day_name):
         else:
             plan_id = result['main_pid']
         
-        # Get the highest day_order
         cursor.execute("""
             SELECT MAX(day_order) AS max_order FROM Exercise_Plan_Day
             WHERE pid = %s
         """, (plan_id,))
         
         max_order_result = cursor.fetchone()
-        # Use the named column from the result dictionary
         max_order = max_order_result['max_order'] if max_order_result and max_order_result['max_order'] is not None else 0
         next_order = max_order + 1
         
@@ -192,15 +171,13 @@ def add_exercises_to_day(day_id, exercise_ids):
     print("ADD EXERCISES", day_id, exercise_ids)
     try:
         conn = connect()
-        cursor = conn.cursor(pymysql.cursors.DictCursor)  # Ensure dictionary cursor
-        
-        # Get max exercise order
+        cursor = conn.cursor()
         cursor.execute("""
             SELECT MAX(exercise_order) as max_order FROM Exercise_Entry
             WHERE did = %s
         """, (day_id,))
         result = cursor.fetchone()
-        max_order = result['max_order'] if result else None  # Access as dictionary
+        max_order = result['max_order'] if result else None
         next_order = 1 if max_order is None else max_order + 1
         print("orders", max_order, next_order)
         
@@ -208,14 +185,14 @@ def add_exercises_to_day(day_id, exercise_ids):
         print("exerciseids", exercise_ids)
         
         for exercise_id in exercise_ids:
+            #detecting duplicates
             try:
-                # Check if this exercise is already in this day
                 cursor.execute("""
                     SELECT COUNT(*) as count FROM Exercise_Entry
                     WHERE did = %s AND eid = %s
                     """, (day_id, exercise_id))
                 result = cursor.fetchone()
-                count = result['count']  # Access as dictionary
+                count = result['count']
                 
                 if count == 0:
                     cursor.execute("""
@@ -237,15 +214,6 @@ def add_exercises_to_day(day_id, exercise_ids):
     conn.close()
             
 def get_day_owner_id(day_id):
-    """
-    Get the ID of the user who owns a day
-    
-    Parameters:
-    day_id (int): The ID of the day
-    
-    Returns:
-    int: The ID of the user who owns the day, or None if not found
-    """
     try:
         conn = connect()
         cursor = conn.cursor()
@@ -266,16 +234,6 @@ def get_day_owner_id(day_id):
         return None
     
 def remove_exercise_from_plan_day(day_id, exercise_id):
-    """
-    Remove an exercise from a day in the user's plan
-    
-    Parameters:
-    day_id (int): The ID of the day
-    exercise_id (int): The ID of the exercise
-    
-    Returns:
-    bool: True if successful, False otherwise
-    """
     try:
         conn = connect()
         cursor = conn.cursor()
@@ -293,16 +251,6 @@ def remove_exercise_from_plan_day(day_id, exercise_id):
         return False
 
 def update_plan_day_name(day_id, new_name):
-    """
-    Update the name of a day in the user's plan
-    
-    Parameters:
-    day_id (int): The ID of the day
-    new_name (str): The new name for the day
-    
-    Returns:
-    bool: True if successful, False otherwise
-    """
     try:
         conn = connect()
         cursor = conn.cursor()
@@ -321,26 +269,13 @@ def update_plan_day_name(day_id, new_name):
         return False
 
 def delete_plan_day(day_id):
-    """
-    Delete a day from the user's plan and all its exercises
-    
-    Parameters:
-    day_id (int): The ID of the day
-    
-    Returns:
-    bool: True if successful, False otherwise
-    """
     try:
         conn = connect()
         cursor = conn.cursor()
-        
-        # First delete all exercises for this day
         cursor.execute("""
             DELETE FROM Exercise_Entry
             WHERE did = %s
         """, (day_id,))
-        
-        # Then delete the day itself
         cursor.execute("""
             DELETE FROM Exercise_Plan_Day
             WHERE did = %s
@@ -354,7 +289,6 @@ def delete_plan_day(day_id):
         return False
 
 def get_main_plan_with_days(user_id):
-    """Get user's main plan with day count and exercises"""
     conn = pymysql.connect(
         host='localhost',
         user='root',
@@ -365,38 +299,34 @@ def get_main_plan_with_days(user_id):
     
     try:
         with conn.cursor() as cursor:
-            # Get main plan ID
             cursor.execute("""
                 SELECT main_pid FROM User WHERE uid = %s
             """, (user_id,))
             result = cursor.fetchone()
             if not result or not result['main_pid']:
                 return None
-
-            # Get plan details and days
+            
             cursor.execute("""
-                SELECT 
-                    p.pid,
-                    p.plan_name,
-                    p.creation_date,
-                    COUNT(d.did) as day_count,
-                    GROUP_CONCAT(d.day_order ORDER BY d.day_order) AS day_orders
-                FROM Exercise_Plan p
-                LEFT JOIN Exercise_Plan_Day d ON p.pid = d.pid
-                WHERE p.pid = %s
-                GROUP BY p.pid
+            SELECT 
+            p.pid,
+            p.plan_name,
+            p.creation_date,
+            COUNT(d.did) as day_count,
+            GROUP_CONCAT(d.day_order ORDER BY d.day_order) AS day_orders
+            FROM Exercise_Plan p
+            LEFT JOIN Exercise_Plan_Day d ON p.pid = d.pid
+            WHERE p.pid = %s
+            GROUP BY p.pid
             """, (result['main_pid'],))
             
             plan = cursor.fetchone()
             if not plan:
                 return None
-
-            # Calculate current day
             creation_date = plan['creation_date']
             days_since_creation = (datetime.now() - creation_date).days
             plan['current_day'] = (days_since_creation % plan['day_count']) + 1 if plan['day_count'] > 0 else 0
-
-            # Get today's exercises
+            
+            #pulling the exercises for the current day
             if plan['current_day'] > 0:
                 cursor.execute("""
                     SELECT e.ename, epe.sets, epe.reps, epe.duration
@@ -409,7 +339,6 @@ def get_main_plan_with_days(user_id):
                 plan['exercises'] = cursor.fetchall()
             else:
                 plan['exercises'] = []
-
             return plan
             
     except Exception as e:
@@ -419,8 +348,7 @@ def get_main_plan_with_days(user_id):
     return
 
 def create_default_plan(user):
-    """Create a new default plan for a user"""
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -428,8 +356,6 @@ def create_default_plan(user):
                 VALUES (%s, 'My Workout Plan')
             """, (user.id,))
             plan_id = cursor.lastrowid
-            
-            # Update the user model directly
             user.set_main_plan(plan_id)
             
             conn.commit()

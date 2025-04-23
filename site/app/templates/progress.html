@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Progress Tracker{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Track Your Progress</h4>
+            </div>
+            <div class="card-body">
+                <!-- Plan Selection -->
+                <div class="form-group">
+                    <label for="plan-select">Select Plan:</label>
+                    <select class="form-control" id="plan-select">
+                        <option value="">-- Select Plan --</option>
+                        {% if user_plans %}
+                            {% for plan in user_plans %}
+                                <option value="{{ plan.pid }}">{{ plan.plan_name }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Day Selection (will be populated via JavaScript) -->
+                <div class="form-group" id="day-select-container" style="display: none;">
+                    <label for="day-select">Select Day:</label>
+                    <select class="form-control" id="day-select">
+                        <option value="">-- Select Day --</option>
+                    </select>
+                </div>
+
+                <!-- Exercise Selection (will be populated via JavaScript) -->
+                <div class="form-group" id="exercise-select-container" style="display: none;">
+                    <label for="exercise-select">Select Exercise:</label>
+                    <select class="form-control" id="exercise-select">
+                        <option value="">-- Select Exercise --</option>
+                    </select>
+                </div>
+
+                <!-- Progress Form (shown when exercise is selected) -->
+                <div id="progress-form-container" style="display: none;">
+                    <hr>
+                    <h5 class="mb-3">Record Your Performance</h5>
+                    <form id="progress-form">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="sets-completed">Sets Completed</label>
+                                <input type="number" class="form-control" id="sets-completed" min="1" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="reps-completed">Reps Completed</label>
+                                <input type="number" class="form-control" id="reps-completed" min="1" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="weight-used">Weight Used (lbs)</label>
+                            <input type="number" class="form-control" id="weight-used" min="0" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Progress</button>
+                    </form>
+                </div>
+
+                <!-- Progress History -->
+                <div class="mt-4" id="progress-history" style="display: none;">
+                    <hr>
+                    <h5>Progress History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Sets</th>
+                                    <th>Reps</th>
+                                    <th>Weight</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // When plan is selected, load days
+    $('#plan-select').change(function() {
+        const planId = $(this).val();
+        if (planId) {
+            $.get(`/get_plan_days/${planId}`, function(days) {
+                const daySelect = $('#day-select');
+                daySelect.empty().append('<option value="">-- Select Day --</option>');
+                days.forEach(day => {
+                    daySelect.append(`<option value="${day.did}">${day.day_name}</option>`);
+                });
+                $('#day-select-container').show();
+                $('#exercise-select-container, #progress-form-container, #progress-history').hide();
+            });
+        } else {
+            $('#day-select-container, #exercise-select-container, #progress-form-container, #progress-history').hide();
+        }
+    });
+
+    // When day is selected, load exercises
+    $('#day-select').change(function() {
+        const dayId = $(this).val();
+        if (dayId) {
+            $.get(`/get_day_exercises/${dayId}`, function(exercises) {
+                const exerciseSelect = $('#exercise-select');
+                exerciseSelect.empty().append('<option value="">-- Select Exercise --</option>');
+                exercises.forEach(ex => {
+                    exerciseSelect.append(`<option value="${ex.entry_id}">${ex.ename}</option>`);
+                });
+                $('#exercise-select-container').show();
+                $('#progress-form-container, #progress-history').hide();
+            });
+        } else {
+            $('#exercise-select-container, #progress-form-container, #progress-history').hide();
+        }
+    });
+
+    // When exercise is selected, show progress form and load history
+    $('#exercise-select').change(function() {
+        const entryId = $(this).val();
+        if (entryId) {
+            // Load exercise details to pre-fill form
+            $.get(`/get_exercise_details/${entryId}`, function(exercise) {
+                $('#sets-completed').attr('placeholder', `Planned: ${exercise.sets}`);
+                $('#reps-completed').attr('placeholder', `Planned: ${exercise.reps}`);
+                $('#progress-form-container').show();
+            });
+
+            // Load progress history
+            $.get(`/get_progress_history/${entryId}`, function(history) {
+                const tableBody = $('#history-table tbody');
+                tableBody.empty();
+                if (history.length > 0) {
+                    history.forEach(record => {
+                        tableBody.append(`
+                            <tr>
+                                <td>${new Date(record.recorded_at).toLocaleDateString()}</td>
+                                <td>${record.sets_completed}</td>
+                                <td>${record.reps_completed}</td>
+                                <td>${record.weight_used || '-'}</td>
+                                <td>${record.notes || '-'}</td>
+                            </tr>
+                        `);
+                    });
+                    $('#progress-history').show();
+                }
+            });
+        } else {
+            $('#progress-form-container, #progress-history').hide();
+        }
+    });
+
+    // Handle progress form submission
+    $('#progress-form').submit(function(e) {
+        e.preventDefault();
+        const entryId = $('#exercise-select').val();
+        const progressData = {
+            sets_completed: $('#sets-completed').val(),
+            reps_completed: $('#reps-completed').val(),
+            weight_used: $('#weight-used').val(),
+            notes: $('#notes').val()
+        };
+
+        $.post(`/save_progress/${entryId}`, progressData, function(response) {
+            if (response.success) {
+                alert('Progress saved successfully!');
+                // Refresh history
+                $('#exercise-select').trigger('change');
+                // Clear form
+                $('#progress-form')[0].reset();
+            } else {
+                alert('Error saving progress: ' + response.message);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    .progress-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress-card h5 {
+        color: #8e24aa;
+        margin-bottom: 15px;
+    }
+    #history-table th {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

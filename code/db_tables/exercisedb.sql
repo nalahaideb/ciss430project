@@ -101,6 +101,17 @@ add column main_pid INT,
 add foreign key (main_pid) references Exercise_Plan(pid) on delete set NULL;
 ALTER TABLE Exercise_Plan MODIFY plan_name VARCHAR(100) NOT NULL DEFAULT 'My Workout Plan';
 
+CREATE TABLE Exercise_Progress (
+    prid INT AUTO_INCREMENT PRIMARY KEY,
+    entry_id INT NOT NULL,
+    sets_completed INT NOT NULL,
+    reps_completed INT NOT NULL,
+    weight_used DECIMAL(5,2),
+    notes TEXT,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entry_id) REFERENCES Exercise_Entry(entry_id) ON DELETE CASCADE
+);
+
 -- test user creation
 insert into User_Credentials(username, email, phash)
 values ('test', 'test@example.com', 'scrypt:32768:8:1$cPRqTQ9ZEEvxlrNQ$4f210848058e3c13b719b8cd64f3019c7c802c0c5a3707291d3ffa8f421855525740fdd59d512e4b4b1f0ec21d57146c444c6246a2cd117a5e77ce7ec18ad49b');
