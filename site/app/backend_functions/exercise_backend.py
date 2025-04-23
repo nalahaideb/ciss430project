@@ -1,24 +1,7 @@
 #import app.db
 import pymysql.cursors
 from datetime import datetime
-#temporarily until i figure out how to PROPERLY FUCKIN IMPORT db.py
-def connect():
-    return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='root',
-        database='exercisedb',
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
-#def connect():
-#    return pymysql.connect(
-#        host='mysqlpal.mysql.pythonanywhere-services.com',
-#        user='mysqlpal',
-#        password='PASICK123*',
-#        database='mysqlpal$exercisedb',
-#        cursorclass=pymysql.cursors.DictCursor
-#    )
+from app.db import get_db_connection as connect
 
 #defaults to selecting all muscles if nothing is selected
 def list_muscles():
