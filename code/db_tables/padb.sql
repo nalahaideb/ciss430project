@@ -15,7 +15,7 @@ uid INT AUTO_INCREMENT,
 ucid INT not NULL,
 fname VARCHAR(100) DEFAULT 'Firstname',
 lname VARCHAR(100) DEFAULT 'Lastname',
-bio TEXT DEFAULT 'user bio',
+bio TEXT,
 primary key (uid),
 foreign key (ucid) references User_Credentials(ucid) on delete CASCADE
 )engine=innodb;
