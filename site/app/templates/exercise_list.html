@@ -2,16 +2,15 @@
 {% block title %}Exercise Library{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <!-- Compact Action Buttons -->
-    <div class="row mb-3">  <!-- Reduced margin -->
+    <div class="row mb-3">
         <div class="col-md-12">
             <div class="d-flex flex-wrap justify-content-start">
                 <a href="{{ url_for('exercise_list', username=user.username) }}" class="btn btn-action btn-refresh mr-2 mb-2">
                     <i class="fas fa-sync-alt mr-1"></i>Refresh
                 </a>
-                <a href="#" class="btn btn-action btn-add-exercise mr-2 mb-2">
+                <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2">
                     <i class="fas fa-plus-circle mr-1"></i>Add Exercise
-                </a>
+                </button>
                 <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-action btn-progress mr-2 mb-2">
                     <i class="fas fa-chart-line mr-1"></i>Progress
                 </a>
@@ -23,38 +22,39 @@
     </div>
 
     <div class="row">
-        <!-- Compact Search Filters -->
+        <!-- Filters -->
         <div class="col-md-3">
-            <div class="card shadow-sm mb-3">  <!-- Reduced margin -->
+            <div class="card shadow-sm mb-3">
                 <div class="card-header bg-primary text-white py-2">
                     <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Search Filters</h5>
                 </div>
-                <form method="POST" class="p-2">  <!-- Reduced padding -->
-                    <div class="form-group mb-2">  <!-- Reduced margin -->
+                <form method="POST" class="p-2">
+                    <div class="form-group mb-2">
                         <h6 class="font-weight-bold text-primary mb-1"><i class="fas fa-muscle mr-1"></i>Muscle Groups</h6>
                         <div class="d-flex flex-wrap">
-                            {% for muscle in ['Abdominals', 'Biceps', 'Chest', 'Cardio', 'Back', 'Glutes', 'Triceps', 'Forearms', 'Shoulders', 'Hamstrings'] %}
-                            <div class="custom-control custom-checkbox mr-2 mb-1">  <!-- Reduced margins -->
-                                <input type="checkbox" class="custom-control-input" id="muscle_{{ loop.index }}" name="muscle_group" value="{{ muscle }}">
+                            {% for muscle in all_muscles %}
+                            <div class="custom-control custom-checkbox mr-2 mb-1">
+                                <input type="checkbox" class="custom-control-input" id="muscle_{{ loop.index }}" name="muscle_group" value="{{ muscle }}"
+                                {% if muscle in muscle_groups %}checked{% endif %}>
                                 <label class="custom-control-label small" for="muscle_{{ loop.index }}">{{ muscle }}</label>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-                    <div class="form-group mb-2">  <!-- Reduced margin -->
+                    <div class="form-group mb-2">
                         <h6 class="font-weight-bold text-primary mb-1"><i class="fas fa-tools mr-1"></i>Equipment</h6>
                         <div class="d-flex flex-wrap">
-                            {% for equip in ['Bands', 'Barbell', 'Body Only', 'Cable', 'Dumbbell', 'E-Z Curl Bar', 'Exercise Ball', 'Foam Roll', 'Kettlebells', 'Machine', 'Medicine Ball', 'None', 'Other'] %}
-                            <div class="custom-control custom-checkbox mr-2 mb-1">  <!-- Reduced margins -->
-                                <input type="checkbox" class="custom-control-input" id="equip_{{ loop.index }}" name="equip_group" value="{{ equip }}">
+                            {% for equip in equipment_list %}
+                            <div class="custom-control custom-checkbox mr-2 mb-1">
+                                <input type="checkbox" class="custom-control-input" id="equip_{{ loop.index }}" name="equip_group" value="{{ equip }}"
+                                {% if equip in selected_equipment %}checked{% endif %}>
                                 <label class="custom-control-label small" for="equip_{{ loop.index }}">{{ equip }}</label>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-
-                    <div class="d-flex justify-content-between mt-2">  <!-- Reduced margin -->
-                        <button type="submit" class="btn btn-sm btn-primary px-3">  <!-- Reduced padding -->
+                    <div class="d-flex justify-content-between mt-2">
+                        <button type="submit" class="btn btn-sm btn-primary px-3">
                             <i class="fas fa-search mr-1"></i>Search
                         </button>
                         <button type="reset" class="btn btn-sm btn-outline-secondary">
@@ -63,158 +63,133 @@
                     </div>
                 </form>
             </div>
-
-            {% if muscle_groups or ex_level or equipment %}
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white py-2">
-                    <h5 class="mb-0"><i class="fas fa-tags mr-1"></i>Active Filters</h5>  <!-- Reduced icon margin -->
-                </div>
-                <div class="card-body p-2">  <!-- Reduced padding -->
-                    <div class="d-flex flex-wrap">
-                        {% if muscle_groups %}
-                        {% for muscle in muscle_groups %}
-                        <span class="badge badge-pill badge-muscle mr-1 mb-1">{{ muscle }}</span>  <!-- Added mb-1 for wrapping -->
-                        {% endfor %}
-                        {% endif %}
-                        
-                        {% if ex_level %}
-                        <span class="badge badge-pill badge-level mr-1 mb-1">{{ ex_level }}</span>  <!-- Added mb-1 for wrapping -->
-                        {% endif %}
-                        
-                        {% if equipment %}
-                        {% if equipment is string %}
-                        <span class="badge badge-pill badge-equipment mr-1 mb-1">{{ equipment }}</span>  <!-- Added mb-1 for wrapping -->
-                        {% else %}
-                        {% for equip in equipment %}
-                        <span class="badge badge-pill badge-equipment mr-1 mb-1">{{ equip }}</span>  <!-- Added mb-1 for wrapping -->
-                        {% endfor %}
-                        {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
 
-        <!-- Compact Exercise Table -->
+        <!-- Exercises Table -->
         <div class="col-md-9">
-            <form method="POST" action="{{ url_for('add_exercises_to_workout') }}">
+            <form method="POST" action="{{ url_for('add_exercises_to_workout') }}" id="exercise-selection-form">
                 <div class="card shadow-sm">
                     <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-list-ul mr-1"></i>Exercise Library</h5>  <!-- Reduced icon margin -->
-                        <span class="badge badge-light">{{ exercises|length }} exercises</span>
+                        <h5 class="mb-0"><i class="fas fa-list-ul mr-1"></i>Exercise Library</h5>
+                        <span class="badge badge-light">{{ exercises[1]|length }} shown</span>
                     </div>
                     <div class="card-body p-0">
-                        {% if exercises %}
-                            {% if exercises|length > 0 %}
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover mb-0">  <!-- Added table-sm -->
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th width="5%">Select</th>
-                                            <th width="10%">ID</th>
-                                            <th width="25%">Exercise</th>
-                                            <th width="15%">Type</th>
-                                            <th width="20%">Muscle</th>
-                                            <th width="25%">Equipment</th>  <!-- Adjusted width -->
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for exercise in exercises %}
-                                        <tr>
-                                            <td>
-                                                <div class="custom-control custom-checkbox">
-                                                    <input type="checkbox" class="custom-control-input" id="ex_{{ exercise.eid }}" name="selected_exercises" value="{{ exercise.eid }}">
-                                                    <label class="custom-control-label" for="ex_{{ exercise.eid }}"></label>
-                                                </div>
-                                            </td>
-                                            <td><span class="badge badge-secondary">{{ exercise.eid }}</span></td>
-                                            <td>
-                                                <strong>{{ exercise.ename }}</strong>
-                                                {% if exercise.ebpart == 'Cardio' %}
-                                                <i class="fas fa-heartbeat text-danger ml-1"></i>
-                                                {% endif %}
-                                            </td>
-                                            <td><span class="badge badge-type">{{ exercise.etype }}</span></td>
-                                            <td><span class="badge badge-muscle">{{ exercise.ebpart }}</span></td>
-                                            <td><span class="badge badge-equipment">{{ exercise.eequip or 'None' }}</span></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="card-footer bg-light d-flex justify-content-between align-items-center py-2 px-3">  <!-- Reduced padding -->
-                                <small class="text-muted">Select exercises to add to your workout</small>
-                                <button type="submit" class="btn btn-success btn-sm px-3">  <!-- Reduced padding -->
-                                    <i class="fas fa-plus mr-1"></i>Add Selected
-                                </button>
-                            </div>
-                            {% else %}
-                            <div class="text-center py-4">  <!-- Reduced padding -->
-                                <i class="fas fa-dumbbell fa-2x text-muted mb-2"></i>  <!-- Reduced size -->
-                                <h6>No exercises found</h6>  <!-- Reduced heading size -->
-                                <p class="text-muted small">Try adjusting your search filters</p>  <!-- Made text smaller -->
-                            </div>
-                            {% endif %}
+                        {% if exercises[1] %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>ID</th>
+                                        <th>Exercise</th>
+                                        <th>Type</th>
+                                        <th>Muscle</th>
+                                        <th>Equipment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exercise in exercises[1] %}
+                                    <tr>
+                                        <td>
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="ex_{{ exercise.eid }}" name="selected_exercises" value="{{ exercise.eid }}">
+                                                <label class="custom-control-label" for="ex_{{ exercise.eid }}"></label>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-secondary">{{ exercise.eid }}</span></td>
+                                        <td><strong>{{ exercise.ename }}</strong></td>
+                                        <td><span class="badge badge-type">{{ exercise.etype }}</span></td>
+                                        <td><span class="badge badge-muscle">{{ exercise.ebpart }}</span></td>
+                                        <td><span class="badge badge-equipment">{{ exercise.eequip or 'None' }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                         {% else %}
-                        <div class="text-center py-4">  <!-- Reduced padding -->
-                            <i class="fas fa-search fa-2x text-muted mb-2"></i>  <!-- Reduced size -->
-                            <h6>Search for exercises</h6>  <!-- Reduced heading size -->
-                            <p class="text-muted small">Use the filters to find exercises</p>  <!-- Made text smaller -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6>No exercises found</h6>
+                            <p class="text-muted small">Try adjusting your search filters</p>
                         </div>
                         {% endif %}
+                    </div>
+
+                    <!-- Pagination Footer -->
+                    <div class="card-footer bg-light d-flex justify-content-between align-items-center py-2 px-3">
+                      <small class="text-muted">
+                        Showing {{ (page - 1) * per_page + 1 }}–{{ (page - 1) * per_page + exercises[1]|length }} of {{ total_items }}
+                      </small>
+                      <ul class="pagination pagination-sm mb-0 flex-wrap">
+                        {% set max_pages = 10 %}
+                        {% set start_page = [page - max_pages // 2, 1]|max %}
+                        {% set end_page = [start_page + max_pages - 1, total_pages]|min %}
+                        {% set start_page = [end_page - max_pages + 1, 1]|max %}
+
+                        {% if page > 1 %}
+                        <li class="page-item">
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=1) }}">&laquo; First</a>
+                        </li>
+                        {% endif %}
+                        {% if start_page > 1 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                        {% for p in range(start_page, end_page + 1) %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=p) }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        {% if end_page < total_pages %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=total_pages) }}">Last &raquo;</a>
+                        </li>
+                        {% endif %}
+                      </ul>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
 <script>
 $(function () {
-    // Make table rows clickable with highlight
     $('tbody tr').click(function(e) {
         if (!$(e.target).is('input,a')) {
             const checkbox = $(this).find('input[type="checkbox"]');
             checkbox.prop('checked', !checkbox.prop('checked'));
-            
-            // Toggle highlight class
             $(this).toggleClass('table-active', checkbox.prop('checked'));
         }
     });
-
-    // Update highlight when checkbox is clicked directly
     $('tbody input[type="checkbox"]').change(function() {
         $(this).closest('tr').toggleClass('table-active', this.checked);
     });
 });
 </script>
-
 <style>
-    /* Keep all existing button colors */
-    .btn-refresh {
-        background: linear-gradient(135deg, #4e54c8, #8f94fb);
-        color: white;
-    }
-    .btn-add-exercise {
-        background: linear-gradient(135deg, #11998e, #38ef7d);
-        color: white;
-    }
-    .btn-progress {
-        background: linear-gradient(135deg, #f46b45, #eea849);
-        color: white;
-    }
-    .btn-plan {
-        background: linear-gradient(135deg, #8e2de2, #4a00e0);
-        color: white;
-    }
-    
-    /* Add row highlighting */
-    .table-active {
-        background-color: rgba(0, 123, 255, 0.1) !important;
-    }
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-    }
+.btn-refresh {
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    color: white;
+}
+.btn-add-exercise {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+}
+.btn-progress {
+    background: linear-gradient(135deg, #f46b45, #eea849);
+    color: white;
+}
+.btn-plan {
+    background: linear-gradient(135deg, #8e2de2, #4a00e0);
+    color: white;
+}
+.table-active {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
 </style>
 {% endblock %}
