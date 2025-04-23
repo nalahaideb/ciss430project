@@ -256,6 +256,46 @@ def cancel_friend_request_route(frid):
     else:
         flash("Failed to cancel friend request.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
+
+# MESSAGES
+@app.route('/<username>/messages', methods=['GET', 'POST'])
+@login_required
+def messages(username):
+    if current_user.username != username:
+        return redirect(url_for('login'))
+
+    uid = current_user.id
+    selected_uid = request.args.get('user', type=int)
+
+    # Automatically ensure a conversation entry exists
+    if selected_uid and not conversation_exists(uid, selected_uid):
+        send_message(uid, selected_uid, "[conversation started]")
+
+    # Handle sending a new message
+    if request.method == 'POST' and selected_uid:
+        message = request.form.get('message', '').strip()
+        if message:
+            send_message(uid, selected_uid, message)
+        return redirect(url_for('messages', username=username, user=selected_uid))
+
+    # Fetch message participants
+    friends = get_messaged_friends(uid)
+
+    # Fetch thread with selected user (if any)
+    thread = []
+    selected_user = None
+    if selected_uid:
+        thread = get_messages_between_users(uid, selected_uid)
+        selected_user = next((f for f in friends if f['uid'] == selected_uid), None)
+
+    return render_template(
+        'messages.html',
+        user=current_user,
+        friends=friends,
+        selected_user=selected_user,
+        thread=thread
+    )
+
         
 #should probably have this confirm the user is registered before we enable them to log on to anything else
 @app.route('/verify', methods=['POST', 'GET'])

@@ -27,6 +27,7 @@
                         <form method="POST" action="{{ url_for('remove_friend_route', uid=user.id) }}">
                             <button type="submit" class="btn btn-outline-danger mt-2">Remove Friend</button>
                         </form>
+                        <a href="{{ url_for('messages', username=current_user.username, user=user.id) }}" class="btn btn-outline-info mt-2">Message</a>
                     {% elif show_accept_reject %}
                         <form method="POST" action="{{ url_for('approve_friend', frid=frid) }}" style="display: inline;">
                             <button type="submit" class="btn btn-success mt-2">Accept</button>

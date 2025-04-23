@@ -300,3 +300,67 @@ def is_friends(uid1, uid2):
             return cursor.fetchone() is not None
     finally:
         conn.close()
+
+def get_messaged_friends(uid):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT u.uid, uc.username, u.fname, u.lname, MAX(m.sent_at) AS last_message
+                FROM Messages m
+                JOIN User u ON u.uid = CASE
+                    WHEN m.sender_id = %s THEN m.receiver_id
+                    WHEN m.receiver_id = %s THEN m.sender_id
+                END
+                JOIN User_Credentials uc ON u.ucid = uc.ucid
+                WHERE m.sender_id = %s OR m.receiver_id = %s
+                GROUP BY u.uid, uc.username, u.fname, u.lname
+                ORDER BY last_message DESC
+            """, (uid, uid, uid, uid))
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def get_messages_between_users(uid1, uid2):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT sender_id, receiver_id, message_text, sent_at
+                FROM Messages
+                WHERE (sender_id = %s AND receiver_id = %s)
+                   OR (sender_id = %s AND receiver_id = %s)
+                ORDER BY sent_at ASC
+            """, (uid1, uid2, uid2, uid1))
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
+def send_message(sender_id, receiver_id, text):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO Messages (sender_id, receiver_id, message_text)
+                VALUES (%s, %s, %s)
+            """, (sender_id, receiver_id, text))
+            conn.commit()
+    finally:
+        conn.close()
+
+def conversation_exists(uid1, uid2):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) AS count
+                FROM Messages
+                WHERE (sender_id = %s AND receiver_id = %s)
+                   OR (sender_id = %s AND receiver_id = %s)
+            """, (uid1, uid2, uid2, uid1))
+            result = cursor.fetchone()
+            return result['count'] > 0
+    finally:
+        conn.close()
+

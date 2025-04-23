@@ -17,7 +17,7 @@ uid INT AUTO_INCREMENT,
 ucid INT not NULL,
 fname VARCHAR(100) DEFAULT 'Firstname',
 lname VARCHAR(100) DEFAULT 'Lastname',
-bio VARCHAR(1024) DEFAULT 'user bio',
+bio TEXT DEFAULT 'user bio',
 primary key (uid),
 foreign key (ucid) references User_Credentials(ucid) on delete CASCADE
 )engine=innodb;
@@ -45,7 +45,7 @@ create table Messages (
 mid INT AUTO_INCREMENT,
 sender_id INT not NULL,
 receiver_id INT not NULL,
-message_text VARCHAR(1024) not NULL,
+message_text TEXT not NULL,
 sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 primary key (mid),
 foreign key (sender_id) references User(uid) on delete CASCADE,
