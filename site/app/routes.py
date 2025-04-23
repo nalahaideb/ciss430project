@@ -11,6 +11,7 @@ from datetime import datetime
 import pytz
 from app.backend_functions.exercise_backend import *
 from app.backend_functions.misc import *
+
 '''
 ###########################################################
 ############## WISHLIST, MARK AS NECESSARY ################
@@ -311,6 +312,9 @@ def verify_user():
             print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
 
             if otp_entered == otp_code:
+                 user_obj = User.get_by_username(user)
+                 if user_obj:
+                     login_user(user_obj)
                 print("POST (OTP): user verified\n")
                 return redirect(url_for('dashboard', username=user))
             else:
