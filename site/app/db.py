@@ -12,9 +12,9 @@ def get_db_connection():
 
 #def get_connection():
 #    return pymysql.connect(
-#        host='mysqlpal.mysql.pythonanywhere-services.com',
+#        host='mysql.mysql.pythonanywhere-services.com',
 #        user='mysqlpal',
 #        password='PASICK123*',
-#        database='exercisedb',
+#        database='mysqlpal$exercisedb',
 #        cursorclass=pymysql.cursors.DictCursor
 #    )
