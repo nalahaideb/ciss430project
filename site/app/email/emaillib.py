@@ -76,7 +76,7 @@ def verify_new_user(user, email):
     conn.close()
     # print("ISEMAIL", is_email, "ISUSER", is_user)
     
-    if len(is_user) > 0 or len(is_email) > 0:
+    if is_email or is_user:
         print("NONUNIQUE CREDENTIALS")
         return False
     else:
