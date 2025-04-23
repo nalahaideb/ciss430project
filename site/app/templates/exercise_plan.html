@@ -1,235 +1,263 @@
 {% extends "base.html" %}
 {% block title %}Exercise Plans{% endblock %}
 {% block content %}
-    <p>{{ now.strftime('%A, %B %d, %Y %I:%M:%S %p %Z%z') }}</p>
-    <div style="display: flex;">
-        <div style="flex: 4; margin-right: 20px;">
-            <h1>Exercise Plans for {{ username }}</h1>
-            
-            <!-- Current plan days section -->
-            <h2>Your Plan Days</h2>
-            <div id="plan-days-container">
-                {% if user_plan_days %}
-                    {% for day in user_plan_days %}
-                    <div class="plan-day" id="day-{{ day.id }}">
-                        <h3>{{ day.name }}</h3>
-                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                            <thead>
-                                <tr>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Exercise</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Details</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if day.exercises %}
-                                    {% for exercise in day.exercises %}
-                                    <tr>
-                                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.ename }}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px;">{{ exercise.level }}, {{ exercise.muscle_group }}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px;">
-                                            <button class="btn btn-danger btn-sm" onclick="removeExerciseFromDay('{{ day.id }}', '{{ exercise.id }}')">Remove</button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="3" style="border: 1px solid #ddd; padding: 8px;">No exercises added to this day yet.</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                        <button class="btn btn-warning btn-sm" onclick="editDayName('{{ day.id }}')">Edit Name</button>
-                        <button class="btn btn-danger btn-sm" onclick="removeDay('{{ day.id }}')">Remove Day</button>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p>No plan days created yet. Add your first day below!</p>
-                {% endif %}
-            </div>
-
-            <!-- Add new day section -->
-            <div id="add-day-container" style="margin: 20px 0;">
-                <h3>Add New Day</h3>
-                <form id="add-day-form" method="POST" action="{{ url_for('add_day') }}">
-                    <div style="display: flex; margin-bottom: 10px;">
-                        <input type="text" name="day_name" placeholder="Day Name (e.g. 'Leg Day', 'Day 1', etc.)" style="flex: 3; padding: 8px; margin-right: 10px;" required>
-                        <button type="submit" class="btn btn-success" style="flex: 1;">Add Day</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Add exercises to day section -->
-            <div id="add-exercises-container">
-              <h3>Add Exercises to Day</h3>
-              <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
-                <div style="margin-bottom: 10px;">
-                  <label for="selected_day">Select Day:</label>
-                  <select name="selected_day" id="selected_day" class="form-control" required>
-                    <option value="">-- Select a Day --</option>
-                    {% if user_plan_days %}
-                    {% for day in user_plan_days %}
-                    <option value="{{ day.id }}">{{ day.name }}</option>
-                    {% endfor %}
-                    {% endif %}
-                  </select>
-                </div>
-                <div class="exercises-selector">
-                  <h4>Select Exercises to Add</h4>
-                  <div class="form-check" id="exercise-checkboxes">
-                    {% if added_exercises %}
-                    {% for exercise in added_exercises %}
-                    <div style="margin-bottom: 5px;">
-                      <input class="form-check-input" type="checkbox" 
-                             name="selected_exercises" 
-                             value="{{ exercise['id'] }}" 
-                             id="exercise_{{ exercise['id'] }}">
-                      <label class="form-check-label" for="exercise_{{ exercise['id'] }}">
-                        {{ exercise['ename'] }} ({{ exercise['level'] }}, {{ exercise['muscle_group'] }})
-                      </label>
-                    </div>
-                    {% endfor %}
-                    {% else %}
-                    <p id="no-exercises-msg">No exercises available. Add exercises first.</p>
-                    {% endif %}
-                  </div>
-                </div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;" id="plan-submit-btn">Add to Plan</button>
-              </form>
-            </div>
-
-            <script>
-              // Add this JavaScript to inspect all checkbox values before submission
-              document.getElementById('plan-submit-btn').addEventListener('click', function(e) {
-                  e.preventDefault();
-                  
-                  const selectedDay = document.getElementById('selected_day').value;
-                  const checkboxes = document.querySelectorAll('input[name="selected_exercises"]:checked');
-                  
-                  console.log('Selected Day ID:', selectedDay);
-                  console.log('Number of checked exercises:', checkboxes.length);
-                  
-                  // Detailed logging of EVERY checkbox
-                  console.log('--- ALL CHECKBOXES ---');
-                  document.querySelectorAll('input[name="selected_exercises"]').forEach(function(cb) {
-                      console.log(`Checkbox ID=${cb.id}, value="${cb.value}", checked=${cb.checked}`);
-                  });
-                  
-                  console.log('--- CHECKED CHECKBOXES ---');
-                  checkboxes.forEach(function(cb) {
-                      console.log(`Checked box ID=${cb.id}, value="${cb.value}"`);
-                  });
-                  
-                  // Only if we have valid selections, submit the form
-                  if (selectedDay && checkboxes.length > 0) {
-                      document.getElementById('add-to-plan-form').submit();
-                  } else {
-                      alert('Please select both a day and at least one exercise.');
-                  }
-              });
-            </script>
-        <div style="flex: 1;">
-            <h2>Search for Plans</h2>
-            <div style="display: flex; margin-bottom: 10px;">
-                <input type="text" id="plan_search" placeholder="Enter plan name" style="flex: 3; padding: 5px; margin-right: 5px;">
-                <button id="plan_search_button" class="btn btn-secondary" style="flex: 1;">Search</button>
-            </div>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Plan Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">Plan A</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">Plan B</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">Plan C</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">Plan D</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">Plan E</td>
-                    </tr>
-                </tbody>
-            </table>
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-dumbbell mr-2"></i>Exercise Plans for {{ username }}</h1>
+        <div class="text-muted">
+            <i class="far fa-calendar-alt mr-1"></i>{{ now.strftime('%A, %B %d, %Y') }}
         </div>
     </div>
 
-    <!-- JavaScript for dynamic functionality -->
-    <script>
-        function removeExerciseFromDay(dayId, exerciseId) {
-            if (confirm('Are you sure you want to remove this exercise from the day?')) {
-                // Submit via AJAX or form to backend
-                fetch('{{ url_for("remove_exercise_from_day") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        day_id: dayId,
-                        exercise_id: exerciseId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        // Refresh the page or update the UI
-                        location.reload();
-                    }
-                });
-            }
-        }
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-lg-9">
+            <!-- Plan Days Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0"><i class="fas fa-calendar-day mr-2"></i>Your Plan Days</h2>
+                </div>
+                <div class="card-body">
+                    {% if user_plan_days %}
+                        <div class="accordion" id="planDaysAccordion">
+                            {% for day in user_plan_days %}
+                            <div class="card mb-3">
+                                <div class="card-header d-flex justify-content-between align-items-center" id="dayHeading{{ day.id }}">
+                                    <h3 class="h6 mb-0">
+                                        <button class="btn btn-link text-dark font-weight-bold" type="button" data-toggle="collapse" data-target="#dayCollapse{{ day.id }}" aria-expanded="true" aria-controls="dayCollapse{{ day.id }}">
+                                            {{ day.name }}
+                                        </button>
+                                    </h3>
+                                    <div>
+                                        <button class="btn btn-sm btn-warning mr-2" onclick="editDayName('{{ day.id }}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="removeDay('{{ day.id }}')">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="dayCollapse{{ day.id }}" class="collapse show" aria-labelledby="dayHeading{{ day.id }}" data-parent="#planDaysAccordion">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>Exercise</th>
+                                                        <th>Details</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% if day.exercises %}
+                                                        {% for exercise in day.exercises %}
+                                                        <tr>
+                                                            <td class="align-middle">
+                                                                <strong>{{ exercise.ename }}</strong>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <span class="badge badge-level mr-1">{{ exercise.level }}</span>
+                                                                <span class="badge badge-muscle">{{ exercise.muscle_group }}</span>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <button class="btn btn-sm btn-outline-danger" onclick="removeExerciseFromDay('{{ day.id }}', '{{ exercise.id }}')">
+                                                                    <i class="fas fa-minus-circle"></i> Remove
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="3" class="text-center py-4 text-muted">
+                                                                <i class="fas fa-dumbbell fa-2x mb-2 d-block"></i>
+                                                                No exercises added yet
+                                                            </td>
+                                                        </tr>
+                                                    {% endif %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                            <h4>No plan days created yet</h4>
+                            <p class="text-muted">Add your first day below to get started</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
 
-        function editDayName(dayId) {
-            const newName = prompt('Enter new name for this day:');
-            if (newName) {
-                // Submit via AJAX or form to backend
-                fetch('{{ url_for("edit_day_name") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        day_id: dayId,
-                        new_name: newName
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        // Refresh the page or update the UI
-                        location.reload();
-                    }
-                });
-            }
-        }
+            <!-- Add New Day Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5 mb-0"><i class="fas fa-plus-circle mr-2"></i>Add New Day</h3>
+                </div>
+                <div class="card-body">
+                    <form id="add-day-form" method="POST" action="{{ url_for('add_day') }}">
+                        <div class="form-row align-items-center">
+                            <div class="col-md-9 mb-2 mb-md-0">
+                                <input type="text" name="day_name" class="form-control" placeholder="Day Name (e.g. 'Leg Day', 'Day 1', etc.)" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fas fa-plus mr-1"></i> Add Day
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-        function removeDay(dayId) {
-            if (confirm('Are you sure you want to remove this day and all its exercises?')) {
-                // Submit via AJAX or form to backend
-                fetch('{{ url_for("remove_day") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        day_id: dayId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        // Refresh the page or update the UI
-                        location.reload();
-                    }
-                });
-            }
+            <!-- Add Exercises Section -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0"><i class="fas fa-dumbbell mr-2"></i>Add Exercises to Day</h3>
+                </div>
+                <div class="card-body">
+                    <form id="add-to-plan-form" method="POST" action="{{ url_for('add_to_plan') }}">
+                        <div class="form-group">
+                            <label for="selected_day">Select Day:</label>
+                            <select name="selected_day" id="selected_day" class="form-control" required>
+                                <option value="">-- Select a Day --</option>
+                                {% if user_plan_days %}
+                                    {% for day in user_plan_days %}
+                                    <option value="{{ day.id }}">{{ day.name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Select Exercises to Add:</label>
+                            <div class="exercise-select-container border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                {% if added_exercises %}
+                                    {% for exercise in added_exercises %}
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" 
+                                               name="selected_exercises" 
+                                               value="{{ exercise['id'] }}" 
+                                               id="exercise_{{ exercise['id'] }}">
+                                        <label class="custom-control-label d-flex justify-content-between" for="exercise_{{ exercise['id'] }}">
+                                            <span>
+                                                <strong>{{ exercise['ename'] }}</strong>
+                                                <small class="text-muted ml-2">{{ exercise['level'] }}, {{ exercise['muscle_group'] }}</small>
+                                            </span>
+                                            <span class="badge badge-type">{{ exercise['type'] }}</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-3 text-muted">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        No exercises available. Add exercises first.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block mt-3" id="plan-submit-btn">
+                            <i class="fas fa-plus-circle mr-1"></i> Add Selected to Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="h5 mb-0"><i class="fas fa-search mr-2"></i>Search Plans</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <input type="text" id="plan_search" class="form-control" placeholder="Enter plan name">
+                    </div>
+                    <button id="plan_search_button" class="btn btn-secondary btn-block mb-3">
+                        <i class="fas fa-search mr-1"></i> Search
+                    </button>
+                    
+                    <div class="list-group">
+                        {% for plan in ['Plan A', 'Plan B', 'Plan C', 'Plan D', 'Plan E'] %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ plan }}
+                            <span class="badge badge-primary badge-pill"><i class="fas fa-eye"></i></span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Consistent badge styles */
+    .badge-muscle {
+        background-color: #ff6b6b;
+        color: white;
+    }
+    .badge-type {
+        background-color: #48dbfb;
+        color: white;
+    }
+    .badge-level {
+        background-color: #1dd1a1;
+        color: white;
+    }
+    
+    /* Exercise selection styling */
+    .exercise-select-container {
+        background-color: #f8f9fa;
+    }
+    
+    /* Card header consistency */
+    .card-header {
+        padding: 0.75rem 1.25rem;
+    }
+    
+    /* Hover effects */
+    .list-group-item:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    /* Button consistency */
+    .btn {
+        transition: all 0.2s;
+    }
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+<script>
+    // Enhanced form submission
+    document.getElementById('plan-submit-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const selectedDay = document.getElementById('selected_day').value;
+        const checkboxes = document.querySelectorAll('input[name="selected_exercises"]:checked');
+        
+        if (selectedDay && checkboxes.length > 0) {
+            document.getElementById('add-to-plan-form').submit();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selection Required',
+                text: 'Please select both a day and at least one exercise.',
+                confirmButtonColor: '#3085d6',
+            });
         }
-    </script>
+    });
+
+    // Keep all existing JavaScript functions (removeExerciseFromDay, editDayName, removeDay)
+    // They remain unchanged from your original code
+</script>
 {% endblock %}
