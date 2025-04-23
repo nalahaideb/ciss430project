@@ -1,4 +1,4 @@
-0# file: db.py
+# file: db.py
 import pymysql.cursors
 
 def get_db_connection():
@@ -9,3 +9,12 @@ def get_db_connection():
         database='exercisedb',
         cursorclass=pymysql.cursors.DictCursor
         )
+
+#def get_connection():
+#    return pymysql.connect(
+#        host='mysqlpal.mysql.pythonanywhere-services.com',
+#        user='mysqlpal',
+#        password='PASICK123*',
+#        database='exercisedb',
+#        cursorclass=pymysql.cursors.DictCursor
+#    )
