@@ -7,8 +7,8 @@ def add_user(user, email, password):
     conn = connect()
     c = conn.cursor()
     phash = generate_password_hash(password)
-    print("INSERTING: insert into User_Credentials (username, email, phash) values (%s, %s, %s);" % (username, email, phash))
-    c.execute("insert into User_Credentials (username, email, phash) values (%s, %s, %s);" % (username, email, phash))
+    print("INSERTING: insert into User_Credentials (username, email, phash) values (%s, %s, %s);" % (user, email, phash))
+    c.execute("insert into User_Credentials (username, email, phash) values (%s, %s, %s);" % (user, email, phash))
     #will update this later, right now everyone has no names or bio
     print("SELECTING: select ucid from User_Credentials where username = '%s';" % user)
     c.execute("select ucid from User_Credentials where username = '%s';" % user)
