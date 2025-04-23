@@ -17,7 +17,7 @@ def sendgmail(to_,
               subject='[NO SUBJECT]',
               text='this is a test',
               html='',
-              attach=test_img, # list of paths or path or None
+              attach=None, # list of paths or path or None
               google_app_password=GOOGLE_APP_PASSWORD
               ):
     try:
