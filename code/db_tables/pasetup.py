@@ -11,26 +11,6 @@ def get_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-def setup_db():
-    try:
-        connection = get_connection()
-        with connection.cursor() as cursor:
-            with open("padb.sql", "r") as f:
-                sql_commands = f.read().split(';')
-                for command in sql_commands:
-                    command = command.strip()
-                    if command:
-                        try:
-                            cursor.execute(command)
-                        except Exception as exec_err:
-                            print("Command failed:", exec_err)
-                            print("Offending command:", command)
-        connection.commit()
-        connection.close()
-        print("Database setup complete.")
-    except Exception as e:
-        print("Database creation error:", e)
-
 def cleanup(value, islist=False):
     value = value.replace('\n', '').replace('"', '').replace("'", '')
     if value == r'\N' or value.strip() == '':
@@ -68,7 +48,6 @@ def create_exercises(conn, csv_path):
             print("File or transaction error:", file_err)
 
 if __name__ == '__main__':
-    setup_db()
     try:
         conn = get_connection()
         path = "megaGymDataset.csv"
