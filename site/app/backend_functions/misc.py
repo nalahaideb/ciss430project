@@ -5,22 +5,44 @@ from app.db import get_db_connection as connect
 
 def add_user(user, email, password):
     conn = connect()
-    c = conn.cursor()
-    phash = generate_password_hash(password)
-    print("INSERTING: insert into User_Credentials (username, email, phash) values ('%s', '%s', '%s');" % (user, email, phash))
-    c.execute("insert into User_Credentials (username, email, phash) values ('%s', '%s', '%s');" % (user, email, phash))
-    #will update this later, right now everyone has no names or bio
-    print("SELECTING: select ucid from User_Credentials where username = '%s';" % user)
-    c.execute("select ucid from User_Credentials where username = '%s';" % user)
-    ucid = c.fetchone()
-    if len(ucid) <= 0:
-        print("INSERTING USER: INSERT INTO User (ucid, fname, lname, bio) VALUES ('%s', '%s', '%s', '%s');" % (ucid, 'NONE', 'NONE', 'NONE'))
-        c.execute("INSERT INTO User (ucid, fname, lname, bio) VALUES ('%s', '%s', '%s', '%s');" % (ucid, 'NONE', 'NONE', 'NONE'))
-        #return True
-    else:
-        print("NONUNIQUE EMAIL, NOT INSERTING")
-        #return False
-    return
+    try:
+        with conn.cursor() as c:
+            phash = generate_password_hash(password)
+            
+            # Insert credentials
+            print("INSERTING User_Credentials")
+            c.execute(
+                "INSERT INTO User_Credentials (username, email, phash) VALUES (%s, %s, %s);",
+                (user, email, phash)
+            )
+
+            # Get ucid back
+            print("SELECTING ucid")
+            c.execute("SELECT ucid FROM User_Credentials WHERE username = %s;", (user,))
+            row = c.fetchone()
+
+            if row and 'ucid' in row:
+                ucid = row['ucid']
+                print(f"INSERTING User with ucid={ucid}")
+                c.execute(
+                    "INSERT INTO User (ucid, fname, lname, bio) VALUES (%s, %s, %s, %s);",
+                    (ucid, 'NONE', 'NONE', 'NONE')
+                )
+            else:
+                print("Failed to retrieve ucid after credential insert.")
+                return False
+
+        conn.commit()
+        print("User successfully added.")
+        return True
+
+    except Exception as e:
+        print(f"Error in add_user: {e}")
+        conn.rollback()
+        return False
+
+    finally:
+        conn.close()
 
 def select_exercises_for_plan(exercise_ids):
     if not exercise_ids:
