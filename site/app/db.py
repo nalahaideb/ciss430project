@@ -10,7 +10,7 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
         )
 
-#def get_connection():
+#def get_db_connection():
 #    return pymysql.connect(
 #        host='mysqlpal.mysql.pythonanywhere-services.com',
 #        user='mysqlpal',
