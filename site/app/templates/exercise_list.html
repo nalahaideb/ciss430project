@@ -63,6 +63,49 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Active Filters Tags Section -->
+            {% if muscle_groups or selected_equipment %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white py-2">
+                    <h5 class="mb-0"><i class="fas fa-tags mr-2"></i>Active Filters</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="mb-2">
+                        <h6 class="font-weight-bold small text-muted mb-2">MUSCLE GROUPS</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for muscle in muscle_groups %}
+                            <span class="badge badge-pill badge-muscle mb-2 mr-2 d-flex align-items-center">
+                                {{ muscle }}
+                                <form method="POST" action="{{ url_for('exercise_list', username=user.username) }}" class="ml-2">
+                                    <input type="hidden" name="remove_muscle" value="{{ muscle }}">
+                                    <button type="submit" class="btn btn-link p-0 m-0 text-white" style="line-height: 1;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="font-weight-bold small text-muted mb-2">EQUIPMENT</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for equip in selected_equipment %}
+                            <span class="badge badge-pill badge-equipment mb-2 mr-2 d-flex align-items-center">
+                                {{ equip }}
+                                <form method="POST" action="{{ url_for('exercise_list', username=user.username) }}" class="ml-2">
+                                    <input type="hidden" name="remove_equip" value="{{ equip }}">
+                                    <button type="submit" class="btn btn-link p-0 m-0 text-white" style="line-height: 1;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Exercises Table -->
@@ -190,6 +233,22 @@ $(function () {
 }
 .table-hover tbody tr:hover {
     background-color: rgba(0, 123, 255, 0.05);
+}
+.badge-muscle {
+    background-color: #ff6b6b;
+    color: white;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+.badge-equipment {
+    background-color: #feca57;
+    color: white;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+.badge-type {
+    background-color: #48dbfb;
+    color: white;
 }
 </style>
 {% endblock %}

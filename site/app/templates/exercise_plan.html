@@ -22,7 +22,7 @@
                     {% if user_plan_days %}
                         <div class="accordion" id="planDaysAccordion">
                             {% for day in user_plan_days %}
-                            <div class="card mb-3">
+                            <div class="card mb-3" id="day-card-{{ day.id }}">
                                 <div class="card-header d-flex justify-content-between align-items-center" id="dayHeading{{ day.id }}">
                                     <h3 class="h6 mb-0">
                                         <button class="btn btn-link text-dark font-weight-bold" type="button" data-toggle="collapse" data-target="#dayCollapse{{ day.id }}" aria-expanded="true" aria-controls="dayCollapse{{ day.id }}">
@@ -49,10 +49,10 @@
                                                         <th>Actions</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                <tbody id="day-{{ day.id }}-exercises">
                                                     {% if day.exercises %}
                                                         {% for exercise in day.exercises %}
-                                                        <tr>
+                                                        <tr id="exercise-row-{{ exercise.id }}">
                                                             <td class="align-middle">
                                                                 <strong>{{ exercise.ename }}</strong>
                                                             </td>
@@ -235,8 +235,23 @@
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
+    /* Animation for removal */
+    .removing {
+        animation: fadeOut 0.3s ease-out forwards;
+    }
+    @keyframes fadeOut {
+        to {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+        }
+    }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Enhanced form submission
     document.getElementById('plan-submit-btn').addEventListener('click', function(e) {
@@ -257,7 +272,160 @@
         }
     });
 
-    // Keep all existing JavaScript functions (removeExerciseFromDay, editDayName, removeDay)
-    // They remain unchanged from your original code
+    function removeExerciseFromDay(dayId, exerciseId) {
+        Swal.fire({
+            title: 'Remove Exercise?',
+            text: "Are you sure you want to remove this exercise from the day?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const row = document.getElementById(`exercise-row-${exerciseId}`);
+                row.classList.add('removing');
+                
+                fetch('{{ url_for("remove_exercise_from_day") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId,
+                        exercise_id: exerciseId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        setTimeout(() => {
+                            row.remove();
+                            // Check if this was the last exercise
+                            const exerciseTable = document.getElementById(`day-${dayId}-exercises`);
+                            if (exerciseTable.rows.length === 1) { // Only header row left
+                                exerciseTable.innerHTML = `
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted">
+                                            <i class="fas fa-dumbbell fa-2x mb-2 d-block"></i>
+                                            No exercises added yet
+                                        </td>
+                                    </tr>
+                                `;
+                            }
+                        }, 300);
+                    } else {
+                        row.classList.remove('removing');
+                        Swal.fire('Error', 'Failed to remove exercise', 'error');
+                    }
+                })
+                .catch(error => {
+                    row.classList.remove('removing');
+                    Swal.fire('Error', 'An error occurred', 'error');
+                });
+            }
+        });
+    }
+
+    function editDayName(dayId) {
+        const currentName = document.querySelector(`#dayHeading${dayId} .btn-link`).textContent.trim();
+        Swal.fire({
+            title: 'Edit Day Name',
+            input: 'text',
+            inputValue: currentName,
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            cancelButtonColor: '#d33',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to enter a name!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{{ url_for("edit_day_name") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId,
+                        new_name: result.value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        document.querySelector(`#dayHeading${dayId} .btn-link`).textContent = result.value;
+                        // Update dropdown options
+                        const dayOption = document.querySelector(`#selected_day option[value="${dayId}"]`);
+                        if (dayOption) {
+                            dayOption.textContent = result.value;
+                        }
+                        Swal.fire('Saved!', 'Day name updated successfully', 'success');
+                    } else {
+                        Swal.fire('Error', 'Failed to update day name', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function removeDay(dayId) {
+        Swal.fire({
+            title: 'Remove Day?',
+            text: "This will permanently remove the day and all its exercises!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const dayCard = document.getElementById(`day-card-${dayId}`);
+                dayCard.classList.add('removing');
+                
+                fetch('{{ url_for("remove_day") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        day_id: dayId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        setTimeout(() => {
+                            dayCard.remove();
+                            // Remove from dropdown
+                            const dayOption = document.querySelector(`#selected_day option[value="${dayId}"]`);
+                            if (dayOption) {
+                                dayOption.remove();
+                            }
+                            // Check if this was the last day
+                            if (document.querySelectorAll('.accordion .card').length === 0) {
+                                document.querySelector('.accordion').innerHTML = `
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                                        <h4>No plan days created yet</h4>
+                                        <p class="text-muted">Add your first day below to get started</p>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    } else {
+                        dayCard.classList.remove('removing');
+                        Swal.fire('Error', 'Failed to remove day', 'error');
+                    }
+                })
+                .catch(error => {
+                    dayCard.classList.remove('removing');
+                    Swal.fire('Error', 'An error occurred', 'error');
+                });
+            }
+        });
+    }
 </script>
 {% endblock %}
