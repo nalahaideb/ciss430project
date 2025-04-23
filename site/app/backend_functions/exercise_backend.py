@@ -38,32 +38,79 @@ def list_equipment():
     conn.close()
     return ret
 
-def get_exercises(muscle_groups, equipment, level, name):
+def get_exercises(muscle_groups, equipment, level, name=None, offset=0, limit=10):
+    conn = connect()
+    try:
+        with conn.cursor() as c:
+            where_clauses = []
+            params = []
+
+            if muscle_groups:
+                where_clauses.append("ebpart IN %s")
+                params.append(tuple(muscle_groups))
+            if equipment:
+                where_clauses.append("eequip IN %s")
+                params.append(tuple(equipment))
+            if level:
+                where_clauses.append("etype = %s")
+                params.append(level)
+            if name:
+                where_clauses.append("ename LIKE %s")
+                params.append(f"%{name}%")
+
+            where_sql = " AND ".join(where_clauses)
+            if where_sql:
+                where_sql = "WHERE " + where_sql
+
+            # 1. Get total count (for pagination)
+            count_sql = f"SELECT COUNT(*) as total FROM Exercises {where_sql}"
+            c.execute(count_sql, tuple(params))
+            total = c.fetchone()['total']
+
+            # 2. Get paginated data
+            data_sql = f"""
+                SELECT eid, ename, etype, ebpart, eequip
+                FROM Exercises
+                {where_sql}
+                ORDER BY ename ASC
+                LIMIT %s OFFSET %s
+            """
+            c.execute(data_sql, tuple(params + [limit, offset]))
+            results = c.fetchall()
+
+            return total, results
+    finally:
+        conn.close()
+
+def get_total_exercise_count(muscle_groups, equipment, level, name):
     conn = connect()
     c = conn.cursor()
-    muscle_string = ''
-    equip_string = ''
-    if len(muscle_groups) > 0:
-        for i in muscle_groups:
-            muscle_string +="'%s'," % i
-        muscle_string = muscle_string[:len(muscle_string) - 1]
-    else:
-        muscle_string = str(list_muscles())
-        muscle_string = muscle_string[1:len(muscle_string)-1]
-    if len(equipment) > 0:
-        for i in equipment:
-            equip_string +="'%s'," % i
-        equip_string = equip_string[:len(equip_string) - 1]
-    else:
-        equip_string = str(list_equipment())
-        equip_string = equip_string[1:len(equip_string)-1]
-        
-    print("select * from Exercises where ebpart in (%s) and eequip in (%s);" % (muscle_string, equip_string))
-    c.execute("select * from Exercises where ebpart in (%s) and eequip in (%s);" % (muscle_string, equip_string))
-    results = c.fetchall()
+
+    query = "SELECT COUNT(*) as total FROM Exercises WHERE 1=1"
+    params = []
+
+    if muscle_groups:
+        placeholders = ','.join(['%s'] * len(muscle_groups))
+        query += f" AND ebpart IN ({placeholders})"
+        params.extend(muscle_groups)
+
+    if equipment:
+        placeholders = ','.join(['%s'] * len(equipment))
+        query += f" AND eequip IN ({placeholders})"
+        params.extend(equipment)
+
+    if level:
+        query += " AND etype = %s"
+        params.append(level)
+
+    if name:
+        query += " AND ename LIKE %s"
+        params.append(f"%{name}%")
+
+    c.execute(query, params)
+    result = c.fetchone()
     conn.close()
-    c.close()
-    return results
+    return result['total'] if result else 0
 
 def get_user_plan_days(user_id):
     try:

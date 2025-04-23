@@ -360,23 +360,52 @@ def verify_user():
 def exercise_list(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    muscle_groups = list_muscles()
-    exercises = []
+
     default_equipment = list_equipment()
+    all_muscles = list_muscles()
+    muscle_groups = []
+    selected_equipment = []
     ex_level = None
     name = None
+
+    # Pagination
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    offset = (page - 1) * per_page
 
     if request.method == 'POST':
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
-        exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name)
+
         session['muscle_groups'] = muscle_groups
         session['ex_level'] = ex_level
         session['selected_equipment'] = selected_equipment
-        return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
 
-    return render_template('exercise_list.html', user=current_user, exercises=exercises, equipment_list=default_equipment, muscle_groups=muscle_groups, ex_level=ex_level, name=name)
+    else:
+        # Load from session if available
+        muscle_groups = session.get('muscle_groups', [])
+        ex_level = session.get('ex_level', None)
+        selected_equipment = session.get('selected_equipment', [])
+
+    # Get paginated exercises
+    exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name, offset, per_page)
+    total_items = get_total_exercise_count(muscle_groups, selected_equipment, ex_level, name)
+    total_pages = (total_items + per_page - 1) // per_page
+
+    return render_template('exercise_list.html',
+                       user=current_user,
+                       exercises=exercises,
+                       equipment_list=default_equipment,
+                       muscle_groups=muscle_groups,
+                       all_muscles=all_muscles,
+                       ex_level=ex_level,
+                       name=name,
+                       page=page,
+                       per_page=per_page,
+                       total_items=total_items,
+                       total_pages=total_pages)
+
 
 @app.route('/add_exercises_to_workout', methods=['POST'])
 @login_required
