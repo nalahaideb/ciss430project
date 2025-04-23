@@ -329,8 +329,11 @@ def verify_user():
             if user and email and password:
                 valid = verify_new_user(user, email)
                 otp = generate_OTP()
-                send_auth_email(email, user, otp) 
-                return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)
+                if valid:
+                    send_auth_email(email, user, otp)
+                    return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)
+                else:
+                    return render_template('register.html')
             else:
                 print("POST (Reg): RETURNING REGISTER, NONUNIQUE CREDENTIALS")
                 return render_template('register.html', error_message="Username or email already exists")
