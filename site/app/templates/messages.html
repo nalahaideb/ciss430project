@@ -1,0 +1,72 @@
+<!-- messages.html -->
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Messages</h2>
+<div class="row">
+    <!-- Sidebar of Messaged Friends -->
+    <div class="col-md-4" style="max-height: 600px; overflow-y: auto;">
+        <div class="card">
+            <div class="card-header">Conversations</div>
+            <ul class="list-group list-group-flush">
+                {% for friend in friends %}
+                    <a href="{{ url_for('messages', username=user.username, user=friend.uid) }}"
+                       class="list-group-item list-group-item-action {% if selected_user and friend.uid == selected_user.uid %}active text-white{% endif %}">
+                        <strong>{{ friend.username }}</strong><br>
+                        <small>{{ friend.fname }} {{ friend.lname }}</small>
+                    </a>
+                {% endfor %}
+                {% if friends|length == 0 %}
+                    <li class="list-group-item text-muted">No conversations yet.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Message Thread View -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                {% if selected_user %}
+                    Conversation with {{ selected_user.fname }} {{ selected_user.lname }}
+                {% else %}
+                    Select a conversation
+                {% endif %}
+            </div>
+            <div class="card-body" style="height: 400px; overflow-y: auto;">
+                {% if selected_user %}
+                    {% set visible_messages = thread | selectattr("message_text", "ne", "[conversation started]") | list %}
+                    {% if visible_messages %}
+                        {% for message in visible_messages %}
+                            <div class="mb-2 {% if message.sender_id == user.id %}text-right{% endif %}">
+                                <div class="p-2 rounded {% if message.sender_id == user.id %}bg-primary text-white{% else %}bg-light{% endif %}"
+                                     style="display: inline-block; max-width: 75%;">
+                                    {{ message.message_text }}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.8em;">
+                                    {{ message.sent_at.strftime('%b %d %Y, %I:%M %p') }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No messages yet.</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">Select a user to view messages.</p>
+                {% endif %}
+            </div>
+            {% if selected_user %}
+                <div class="card-footer">
+                    <form method="POST" class="d-flex">
+                        <input type="text" name="message" class="form-control mr-2" placeholder="Type a message..." required autocomplete="off">
+
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
