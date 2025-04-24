@@ -61,7 +61,7 @@
                 <div class="progress" style="height: 30px;">
                     <div class="progress-bar bg-success" 
                          role="progressbar" 
-                         style="width: {{ (plan.current_day / plan.day_count * 100)|round }}%"
+                         style="width: {% if plan.day_count > 0 %}{{ (plan.current_day / plan.day_count * 100)|round }}%{% else %}0%{% endif %}"
                          aria-valuenow="{{ plan.current_day }}" 
                          aria-valuemin="0" 
                          aria-valuemax="{{ plan.day_count }}">
@@ -71,7 +71,7 @@
                 <div class="mt-3">
                     <small class="text-muted">
                         Plan started on {{ plan.creation_date.strftime('%b %d, %Y') }}<br>
-                        Current cycle: {{ (plan.current_day / plan.day_count * 100)|round }}% complete
+                        Current cycle: {% if plan.day_count > 0 %}{{ (plan.current_day / plan.day_count * 100)|round }}% complete{% else %}First day!{% endif %}
                     </small>
                 </div>
                 {% else %}

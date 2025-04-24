@@ -368,12 +368,23 @@ def exercise_list(username):
     ex_level = None
     name = None
 
-    # Pagination
     page = int(request.args.get('page', 1))
     per_page = 10
     offset = (page - 1) * per_page
 
+    
     if request.method == 'POST':
+        if 'remove_muscle' in request.form:
+            muscle_groups = session.get('muscle_groups', [])
+            muscle_groups.remove(request.form['remove_muscle'])
+            session['muscle_groups'] = muscle_groups
+            return redirect(url_for('exercise_list', username=username))
+            
+        if 'remove_equip' in request.form:
+            selected_equipment = session.get('selected_equipment', [])
+            selected_equipment.remove(request.form['remove_equip'])
+            session['selected_equipment'] = selected_equipment
+            return redirect(url_for('exercise_list', username=username))
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
@@ -383,7 +394,6 @@ def exercise_list(username):
         session['selected_equipment'] = selected_equipment
 
     else:
-        # Load from session if available
         muscle_groups = session.get('muscle_groups', [])
         ex_level = session.get('ex_level', None)
         selected_equipment = session.get('selected_equipment', [])
@@ -571,7 +581,7 @@ def create_plan():
 @login_required
 def get_plan_days(plan_id):
     """Get days for selected plan"""
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -585,7 +595,7 @@ def get_plan_days(plan_id):
 @app.route('/get_day_exercises/<int:day_id>')
 @login_required
 def get_day_exercises(day_id):
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -602,7 +612,7 @@ def get_day_exercises(day_id):
 @app.route('/get_exercise_details/<int:entry_id>')
 @login_required
 def get_exercise_details(entry_id):
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -616,7 +626,7 @@ def get_exercise_details(entry_id):
 @app.route('/get_progress_history/<int:entry_id>')
 @login_required
 def get_progress_history(entry_id):
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -633,7 +643,7 @@ def get_progress_history(entry_id):
 @login_required
 def save_progress(entry_id):
     data = request.json
-    conn = get_db_connection()
+    conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -659,3 +669,45 @@ def progress(username):
     return render_template('progress.html', 
                          user=current_user,
                          plan=plan)
+
+#dont forget to add this back to exercise_list.html: <!-- IMPLEMENT THIS LATER{{ url_for('add_exercise_to_db') }} -->
+
+@app.route('/<username>/add_exercise_to_db')
+@login_required
+def add_exercise_to_db(username):
+    if current_user.username != username:
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        # Get form data
+        name = request.form.get('name')
+        muscle = request.form.get('muscle')
+        equipment = request.form.get('equipment')
+        exercise_type = request.form.get('type')
+        
+        if not name or not muscle:
+            flash('Name and muscle group are required', 'error')
+            return redirect(url_for('add_exercise_to_db'))
+        try:
+            
+            db.session.add(new_exercise)
+            db.session.commit()
+            
+            flash('Exercise added successfully!', 'success')
+            return redirect(url_for('exercise_list', username=current_user.username))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding exercise: {str(e)}', 'error')
+            return redirect(url_for('add_exercise_to_db'))
+    
+    # For GET request, show the form
+    # muscle_groups = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Abs', 'Cardio']
+    # equipment_list = ['Dumbbell', 'Barbell', 'Machine', 'Bodyweight', 'Kettlebell', 
+    #                  'Resistance Band', 'Cable', 'None']
+    # exercise_types = ['Strength', 'Cardio', 'Flexibility']
+    return redirect(url_for('add_exercise_to_database.html'))
+
+    return render_template('add_exercise.html', 
+                         muscle_groups=muscle_groups,
+                         equipment_list=equipment_list,
+                         exercise_types=exercise_types)

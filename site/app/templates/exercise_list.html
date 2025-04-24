@@ -11,6 +11,9 @@
                 <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2">
                     <i class="fas fa-plus-circle mr-1"></i>Add Exercise
                 </button>
+                <a href="##########" class="btn btn-action btn-add-to-db mr-2 mb-2">
+                    <i class="fas fa-database mr-1"></i>Add Exercise to DB
+                </a>
                 <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-action btn-progress mr-2 mb-2">
                     <i class="fas fa-chart-line mr-1"></i>Progress
                 </a>
@@ -157,7 +160,32 @@
                         </div>
                         {% endif %}
                     </div>
-
+                    <!-- New Selection Panel Column (3 cols) - Far Right -->
+                    <div class="col-md-3 pl-0">
+                      <div class="card shadow-sm h-100" style="border-left: 1px solid rgba(0,0,0,.125);">
+                        <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
+                          <h5 class="mb-0"><i class="fas fa-clipboard-list mr-1"></i>Selected Exercises</h5>
+                          <span class="badge badge-light" id="selected-count">0</span>
+                        </div>
+                        <div class="card-body p-0 d-flex flex-column" style="min-height: 300px;">
+                          <div id="selected-exercises-list" class="flex-grow-1" style="overflow-y: auto;">
+                            <div class="text-center text-muted py-5" id="no-selections-message">
+                              <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                              <p>Select exercises from the list</p>
+                            </div>
+                          </div>
+                          <div class="border-top p-2 bg-light" id="selection-actions" style="display: none;">
+                            <button class="btn btn-sm btn-outline-danger btn-block mb-2" id="clear-selections">
+                              <i class="fas fa-trash-alt mr-1"></i> Clear All
+                            </button>
+                            <button class="btn btn-sm btn-success btn-block" id="save-selections">
+                              <i class="fas fa-save mr-1"></i> Save Selection
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
                     <!-- Pagination Footer -->
                     <div class="card-footer bg-light d-flex justify-content-between align-items-center py-2 px-3">
                       <small class="text-muted">
@@ -199,18 +227,146 @@
 </div>
 <script>
 $(function () {
+    // Initialize selected exercises from sessionStorage
+    let selectedExercises = JSON.parse(sessionStorage.getItem('selectedExercises') || '{}');
+
+    // Function to update the selection panel
+    function updateSelectionPanel() {
+        const selectedList = $('#selected-exercises-list');
+        const noSelectionsMessage = $('#no-selections-message');
+        const selectionActions = $('#selection-actions');
+        
+        selectedList.empty();
+        
+        if (Object.keys(selectedExercises).length === 0) {
+            noSelectionsMessage.show();
+            selectionActions.hide();
+        } else {
+            noSelectionsMessage.hide();
+            selectionActions.show();
+            
+            Object.entries(selectedExercises).forEach(([id, exercise]) => {
+                selectedList.append(`
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded" data-exercise-id="${id}">
+                        <div>
+                            <strong>${exercise.name}</strong><br>
+                            <small class="text-muted">${exercise.muscle} • ${exercise.equip}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger remove-exercise" data-exercise-id="${id}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `);
+            });
+        }
+    }
+
+    // Initialize panel
+    updateSelectionPanel();
+
+    // Handle exercise selection
     $('tbody tr').click(function(e) {
         if (!$(e.target).is('input,a')) {
             const checkbox = $(this).find('input[type="checkbox"]');
-            checkbox.prop('checked', !checkbox.prop('checked'));
-            $(this).toggleClass('table-active', checkbox.prop('checked'));
+            const isChecked = !checkbox.prop('checked');
+            checkbox.prop('checked', isChecked);
+            $(this).toggleClass('table-active', isChecked);
+            
+            if (isChecked) {
+                const exerciseId = checkbox.val();
+                const exerciseName = $(this).find('td:nth-child(3) strong').text();
+                const exerciseMuscle = $(this).find('td:nth-child(5) span').text();
+                const exerciseEquip = $(this).find('td:nth-child(6) span').text();
+                
+                selectedExercises[exerciseId] = {
+                    name: exerciseName,
+                    muscle: exerciseMuscle,
+                    equip: exerciseEquip
+                };
+            } else {
+                delete selectedExercises[checkbox.val()];
+            }
+            
+            sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
+            updateSelectionPanel();
         }
     });
+
+    // Handle checkbox changes
     $('tbody input[type="checkbox"]').change(function() {
-        $(this).closest('tr').toggleClass('table-active', this.checked);
+        const exerciseId = $(this).val();
+        const row = $(this).closest('tr');
+        
+        if (this.checked) {
+            const exerciseName = row.find('td:nth-child(3) strong').text();
+            const exerciseMuscle = row.find('td:nth-child(5) span').text();
+            const exerciseEquip = row.find('td:nth-child(6) span').text();
+            
+            selectedExercises[exerciseId] = {
+                name: exerciseName,
+                muscle: exerciseMuscle,
+                equip: exerciseEquip
+            };
+        } else {
+            delete selectedExercises[exerciseId];
+        }
+        
+        sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
+        updateSelectionPanel();
+    });
+
+    // Handle remove button clicks
+    $(document).on('click', '.remove-exercise', function() {
+        const exerciseId = $(this).data('exercise-id');
+        delete selectedExercises[exerciseId];
+        sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
+        
+        // Uncheck the corresponding checkbox in the table
+        $(`input[value="${exerciseId}"]`).prop('checked', false)
+            .closest('tr').removeClass('table-active');
+        
+        updateSelectionPanel();
+    });
+
+    // Handle clear all button
+    $('#clear-selections').click(function() {
+        selectedExercises = {};
+        sessionStorage.removeItem('selectedExercises');
+        $('tbody input[type="checkbox"]').prop('checked', false)
+            .closest('tr').removeClass('table-active');
+        updateSelectionPanel();
+    });
+
+    // Handle save button
+    $('#save-selections').click(function() {
+        // You can implement saving logic here
+        alert('Selected exercises saved!');
+        // Example: Submit the form
+        // $('#exercise-selection-form').submit();
+    });
+
+    // Initialize checkboxes based on sessionStorage
+    Object.keys(selectedExercises).forEach(id => {
+        $(`input[value="${id}"]`).prop('checked', true)
+            .closest('tr').addClass('table-active');
     });
 });
 </script>
+<script>
+  $(function () {
+      $('tbody tr').click(function(e) {
+          if (!$(e.target).is('input,a')) {
+              const checkbox = $(this).find('input[type="checkbox"]');
+              checkbox.prop('checked', !checkbox.prop('checked'));
+              $(this).toggleClass('table-active', checkbox.prop('checked'));
+          }
+      });
+      $('tbody input[type="checkbox"]').change(function() {
+          $(this).closest('tr').toggleClass('table-active', this.checked);
+      });
+  });
+</script>
+
 <style>
 .btn-refresh {
     background: linear-gradient(135deg, #4e54c8, #8f94fb);
@@ -218,6 +374,10 @@ $(function () {
 }
 .btn-add-exercise {
     background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+}
+.btn-add-to-db {
+    background: linear-gradient(135deg, #ff8a00, #e52e71);
     color: white;
 }
 .btn-progress {
@@ -250,5 +410,30 @@ $(function () {
     background-color: #48dbfb;
     color: white;
 }
+.sticky-top {
+position: -webkit-sticky;
+position: sticky;
+z-index: 1020;
+}
+
+#selected-exercises-panel {
+max-height: calc(100vh - 200px);
+overflow-y: auto;
+}
+
+#selected-exercises-list div {
+transition: all 0.2s ease;
+}
+
+#selected-exercises-list div:hover {
+background-color: rgba(0, 123, 255, 0.05);
+}
+
+.remove-exercise {
+padding: 0.1rem 0.35rem;
+font-size: 0.8rem;
+}
 </style>
 {% endblock %}
+
+                  <!-- IMPLEMENT THIS LATER{{ url_for('add_exercise_to_db') }} -->
