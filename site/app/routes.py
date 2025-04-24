@@ -366,13 +366,12 @@ def exercise_list(username):
     muscle_groups = []
     selected_equipment = []
     ex_level = None
-    name = None
+    name = 'fuuuuuuuuuuuuuuuuuuuuuuuck'
 
     page = int(request.args.get('page', 1))
     per_page = 10
     offset = (page - 1) * per_page
 
-    
     if request.method == 'POST':
         if 'remove_muscle' in request.form:
             muscle_groups = session.get('muscle_groups', [])
@@ -388,11 +387,13 @@ def exercise_list(username):
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
-        name = '' #add element from search form
+        name = request.form.get('exname')
+        print("NAME=", name)
         session['muscle_groups'] = muscle_groups
         session['ex_level'] = ex_level
         session['selected_equipment'] = selected_equipment
-
+        session['exname'] = name
+        
     else:
         muscle_groups = session.get('muscle_groups', [])
         ex_level = session.get('ex_level', None)

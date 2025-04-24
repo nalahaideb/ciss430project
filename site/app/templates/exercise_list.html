@@ -2,15 +2,13 @@
 {% block title %}Exercise Library{% endblock %}
 {% block content %}
 <div class="container-fluid">
+    <!-- Button Row -->
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="d-flex flex-wrap justify-content-start">
                 <a href="{{ url_for('exercise_list', username=user.username) }}" class="btn btn-action btn-refresh mr-2 mb-2">
                     <i class="fas fa-sync-alt mr-1"></i>Refresh
                 </a>
-                <!-- <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2"> -->
-                <!--     <i class="fas fa-plus-circle mr-1"></i>Add Exercise -->
-                <!-- </button> -->
                 <a href="{{ url_for('add_exercise_to_db', username=user.username) }}" class="btn btn-action btn-add-to-db mr-2 mb-2">
                     <i class="fas fa-database mr-1"></i>Add a New Exercise to the Database
                 </a>
@@ -24,6 +22,31 @@
         </div>
     </div>
 
+    <!-- Search Bar Row -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="POST" action="{{ url_for('exercise_list', username=user.username) }}" class="card shadow-sm">
+                <div class="card-body p-2">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="exname" placeholder="Search exercises..." 
+                               value="{{ name if name else '' }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            {% if name %}
+                            <a href="{{ url_for('exercise_list', username=user.username) }}" 
+                               class="btn btn-outline-secondary" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Filters Column -->
         <div class="col-md-3">
@@ -32,6 +55,9 @@
                     <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Search Filters</h5>
                 </div>
                 <form method="POST" class="p-2">
+                    {% if name %}
+                    <input type="hidden" name="name" value="{{ name }}">
+                    {% endif %}
                     <div class="form-group mb-2">
                         <h6 class="font-weight-bold text-primary mb-1"><i class="fas fa-muscle mr-1"></i>Muscle Groups</h6>
                         <div class="d-flex flex-wrap">
@@ -68,12 +94,28 @@
             </div>
 
             <!-- Active Filters Tags Section -->
-            {% if muscle_groups or selected_equipment %}
+            {% if muscle_groups or selected_equipment or name %}
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-info text-white py-2">
                     <h5 class="mb-0"><i class="fas fa-tags mr-2"></i>Active Filters</h5>
                 </div>
                 <div class="card-body p-3">
+                    {% if name %}
+                    <div class="mb-2">
+                        <h6 class="font-weight-bold small text-muted mb-2">SEARCH TERM</h6>
+                        <div class="d-flex flex-wrap">
+                            <span class="badge badge-pill badge-secondary mb-2 mr-2 d-flex align-items-center">
+                                "{{ name }}"
+                                <form method="POST" action="{{ url_for('exercise_list', username=user.username) }}" class="ml-2">
+                                    <input type="hidden" name="name" value="">
+                                    <button type="submit" class="btn btn-link p-0 m-0 text-white" style="line-height: 1;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="mb-2">
                         <h6 class="font-weight-bold small text-muted mb-2">MUSCLE GROUPS</h6>
                         <div class="d-flex flex-wrap">
@@ -174,7 +216,7 @@
 
                         {% if page > 1 %}
                         <li class="page-item">
-                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=1) }}">&laquo; First</a>
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=1, name=name if name else '') }}">&laquo; First</a>
                         </li>
                         {% endif %}
                         {% if start_page > 1 %}
@@ -182,7 +224,7 @@
                         {% endif %}
                         {% for p in range(start_page, end_page + 1) %}
                         <li class="page-item {% if p == page %}active{% endif %}">
-                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=p) }}">{{ p }}</a>
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=p, name=name if name else '') }}">{{ p }}</a>
                         </li>
                         {% endfor %}
                         {% if end_page < total_pages %}
@@ -190,7 +232,7 @@
                         {% endif %}
                         {% if page < total_pages %}
                         <li class="page-item">
-                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=total_pages) }}">Last &raquo;</a>
+                          <a class="page-link" href="{{ url_for('exercise_list', username=user.username, page=total_pages, name=name if name else '') }}">Last &raquo;</a>
                         </li>
                         {% endif %}
                       </ul>
@@ -410,6 +452,7 @@ $(function () {
     flex-shrink: 0;
 }
 
+/* Make the panel full height on larger screens */
 @media (min-width: 992px) {
     .h-100 {
         height: calc(100vh - 120px) !important;
