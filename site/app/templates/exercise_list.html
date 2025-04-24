@@ -8,11 +8,11 @@
                 <a href="{{ url_for('exercise_list', username=user.username) }}" class="btn btn-action btn-refresh mr-2 mb-2">
                     <i class="fas fa-sync-alt mr-1"></i>Refresh
                 </a>
-                <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2">
-                    <i class="fas fa-plus-circle mr-1"></i>Add Exercise
-                </button>
-                <a href="##########" class="btn btn-action btn-add-to-db mr-2 mb-2">
-                    <i class="fas fa-database mr-1"></i>Add Exercise to DB
+                <!-- <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2"> -->
+                <!--     <i class="fas fa-plus-circle mr-1"></i>Add Exercise -->
+                <!-- </button> -->
+                <a href="#############" class="btn btn-action btn-add-to-db mr-2 mb-2">
+                    <i class="fas fa-database mr-1"></i>Add a New Exercise to the Database
                 </a>
                 <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-action btn-progress mr-2 mb-2">
                     <i class="fas fa-chart-line mr-1"></i>Progress
@@ -25,7 +25,7 @@
     </div>
 
     <div class="row">
-        <!-- Filters -->
+        <!-- Filters Column -->
         <div class="col-md-3">
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-primary text-white py-2">
@@ -111,8 +111,8 @@
             {% endif %}
         </div>
 
-        <!-- Exercises Table -->
-        <div class="col-md-9">
+        <!-- Exercises Table Column -->
+        <div class="col-md-6">
             <form method="POST" action="{{ url_for('add_exercises_to_workout') }}" id="exercise-selection-form">
                 <div class="card shadow-sm">
                     <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
@@ -160,32 +160,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <!-- New Selection Panel Column (3 cols) - Far Right -->
-                    <div class="col-md-3 pl-0">
-                      <div class="card shadow-sm h-100" style="border-left: 1px solid rgba(0,0,0,.125);">
-                        <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
-                          <h5 class="mb-0"><i class="fas fa-clipboard-list mr-1"></i>Selected Exercises</h5>
-                          <span class="badge badge-light" id="selected-count">0</span>
-                        </div>
-                        <div class="card-body p-0 d-flex flex-column" style="min-height: 300px;">
-                          <div id="selected-exercises-list" class="flex-grow-1" style="overflow-y: auto;">
-                            <div class="text-center text-muted py-5" id="no-selections-message">
-                              <i class="fas fa-hand-pointer fa-2x mb-2"></i>
-                              <p>Select exercises from the list</p>
-                            </div>
-                          </div>
-                          <div class="border-top p-2 bg-light" id="selection-actions" style="display: none;">
-                            <button class="btn btn-sm btn-outline-danger btn-block mb-2" id="clear-selections">
-                              <i class="fas fa-trash-alt mr-1"></i> Clear All
-                            </button>
-                            <button class="btn btn-sm btn-success btn-block" id="save-selections">
-                              <i class="fas fa-save mr-1"></i> Save Selection
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                </div>
+
                     <!-- Pagination Footer -->
                     <div class="card-footer bg-light d-flex justify-content-between align-items-center py-2 px-3">
                       <small class="text-muted">
@@ -223,8 +198,35 @@
                 </div>
             </form>
         </div>
+
+        <!-- Selection Panel Column -->
+        <div class="col-md-3 pl-0">
+            <div class="card shadow-sm h-100" style="border-left: 1px solid rgba(0,0,0,.125);">
+                <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list mr-1"></i>Selected Exercises</h5>
+                    <span class="badge badge-light" id="selected-count">0</span>
+                </div>
+                <div class="card-body p-0 d-flex flex-column" style="min-height: 300px;">
+                    <div id="selected-exercises-list" class="flex-grow-1" style="overflow-y: auto;">
+                        <div class="text-center text-muted py-5" id="no-selections-message">
+                            <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                            <p>Select exercises from the list</p>
+                        </div>
+                    </div>
+                    <div class="border-top p-2 bg-light" id="selection-actions" style="display: none;">
+                        <button class="btn btn-sm btn-outline-danger btn-block mb-2" id="clear-selections">
+                            <i class="fas fa-trash-alt mr-1"></i> Clear All
+                        </button>
+                        <button class="btn btn-sm btn-success btn-block" id="save-selections">
+                            <i class="fas fa-save mr-1"></i> Save Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
 <script>
 $(function () {
     // Initialize selected exercises from sessionStorage
@@ -235,10 +237,13 @@ $(function () {
         const selectedList = $('#selected-exercises-list');
         const noSelectionsMessage = $('#no-selections-message');
         const selectionActions = $('#selection-actions');
+        const selectedCount = $('#selected-count');
         
         selectedList.empty();
+        const count = Object.keys(selectedExercises).length;
+        selectedCount.text(count);
         
-        if (Object.keys(selectedExercises).length === 0) {
+        if (count === 0) {
             noSelectionsMessage.show();
             selectionActions.hide();
         } else {
@@ -247,12 +252,19 @@ $(function () {
             
             Object.entries(selectedExercises).forEach(([id, exercise]) => {
                 selectedList.append(`
-                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded" data-exercise-id="${id}">
-                        <div>
-                            <strong>${exercise.name}</strong><br>
-                            <small class="text-muted">${exercise.muscle} • ${exercise.equip}</small>
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-bg">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <strong class="mr-2">${exercise.name}</strong>
+                                <span class="badge badge-secondary small">#${id}</span>
+                            </div>
+                            <div class="d-flex">
+                                <span class="badge badge-muscle small mr-1">${exercise.muscle}</span>
+                                <span class="badge badge-equipment small">${exercise.equip}</span>
+                            </div>
                         </div>
-                        <button class="btn btn-sm btn-outline-danger remove-exercise" data-exercise-id="${id}">
+                        <button class="btn btn-sm btn-outline-danger remove-exercise ml-2" 
+                                data-exercise-id="${id}" title="Remove">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -266,38 +278,24 @@ $(function () {
 
     // Handle exercise selection
     $('tbody tr').click(function(e) {
-        if (!$(e.target).is('input,a')) {
+        if (!$(e.target).is('input,a,button')) {
             const checkbox = $(this).find('input[type="checkbox"]');
             const isChecked = !checkbox.prop('checked');
-            checkbox.prop('checked', isChecked);
-            $(this).toggleClass('table-active', isChecked);
-            
-            if (isChecked) {
-                const exerciseId = checkbox.val();
-                const exerciseName = $(this).find('td:nth-child(3) strong').text();
-                const exerciseMuscle = $(this).find('td:nth-child(5) span').text();
-                const exerciseEquip = $(this).find('td:nth-child(6) span').text();
-                
-                selectedExercises[exerciseId] = {
-                    name: exerciseName,
-                    muscle: exerciseMuscle,
-                    equip: exerciseEquip
-                };
-            } else {
-                delete selectedExercises[checkbox.val()];
-            }
-            
-            sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
-            updateSelectionPanel();
+            handleExerciseSelection(checkbox, isChecked, $(this));
         }
     });
 
     // Handle checkbox changes
     $('tbody input[type="checkbox"]').change(function() {
-        const exerciseId = $(this).val();
-        const row = $(this).closest('tr');
+        handleExerciseSelection($(this), this.checked, $(this).closest('tr'));
+    });
+
+    function handleExerciseSelection(checkbox, isChecked, row) {
+        checkbox.prop('checked', isChecked);
+        row.toggleClass('table-active', isChecked);
         
-        if (this.checked) {
+        const exerciseId = checkbox.val();
+        if (isChecked) {
             const exerciseName = row.find('td:nth-child(3) strong').text();
             const exerciseMuscle = row.find('td:nth-child(5) span').text();
             const exerciseEquip = row.find('td:nth-child(6) span').text();
@@ -313,7 +311,7 @@ $(function () {
         
         sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
         updateSelectionPanel();
-    });
+    }
 
     // Handle remove button clicks
     $(document).on('click', '.remove-exercise', function() {
@@ -330,19 +328,20 @@ $(function () {
 
     // Handle clear all button
     $('#clear-selections').click(function() {
-        selectedExercises = {};
-        sessionStorage.removeItem('selectedExercises');
-        $('tbody input[type="checkbox"]').prop('checked', false)
-            .closest('tr').removeClass('table-active');
-        updateSelectionPanel();
+        if (Object.keys(selectedExercises).length > 0) {
+            if (confirm('Clear all selected exercises?')) {
+                selectedExercises = {};
+                sessionStorage.removeItem('selectedExercises');
+                $('tbody input[type="checkbox"]').prop('checked', false)
+                    .closest('tr').removeClass('table-active');
+                updateSelectionPanel();
+            }
+        }
     });
 
-    // Handle save button
+    // Handle save button (submits the form)
     $('#save-selections').click(function() {
-        // You can implement saving logic here
-        alert('Selected exercises saved!');
-        // Example: Submit the form
-        // $('#exercise-selection-form').submit();
+        $('#exercise-selection-form').submit();
     });
 
     // Initialize checkboxes based on sessionStorage
@@ -351,20 +350,6 @@ $(function () {
             .closest('tr').addClass('table-active');
     });
 });
-</script>
-<script>
-  $(function () {
-      $('tbody tr').click(function(e) {
-          if (!$(e.target).is('input,a')) {
-              const checkbox = $(this).find('input[type="checkbox"]');
-              checkbox.prop('checked', !checkbox.prop('checked'));
-              $(this).toggleClass('table-active', checkbox.prop('checked'));
-          }
-      });
-      $('tbody input[type="checkbox"]').change(function() {
-          $(this).closest('tr').toggleClass('table-active', this.checked);
-      });
-  });
 </script>
 
 <style>
@@ -410,30 +395,25 @@ $(function () {
     background-color: #48dbfb;
     color: white;
 }
-.sticky-top {
-position: -webkit-sticky;
-position: sticky;
-z-index: 1020;
+
+/* Selection Panel Styles */
+#selected-exercises-list {
+    min-height: 200px;
+    max-height: calc(100vh - 300px);
 }
 
-#selected-exercises-panel {
-max-height: calc(100vh - 200px);
-overflow-y: auto;
+.hover-bg:hover {
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
-#selected-exercises-list div {
-transition: all 0.2s ease;
+#selection-actions {
+    flex-shrink: 0;
 }
 
-#selected-exercises-list div:hover {
-background-color: rgba(0, 123, 255, 0.05);
-}
-
-.remove-exercise {
-padding: 0.1rem 0.35rem;
-font-size: 0.8rem;
+@media (min-width: 992px) {
+    .h-100 {
+        height: calc(100vh - 120px) !important;
+    }
 }
 </style>
 {% endblock %}
-
-                  <!-- IMPLEMENT THIS LATER{{ url_for('add_exercise_to_db') }} -->

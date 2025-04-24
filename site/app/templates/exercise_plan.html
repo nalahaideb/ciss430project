@@ -271,62 +271,118 @@
             });
         }
     });
-
-    function removeExerciseFromDay(dayId, exerciseId) {
-        Swal.fire({
-            title: 'Remove Exercise?',
-            text: "Are you sure you want to remove this exercise from the day?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, remove it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const row = document.getElementById(`exercise-row-${exerciseId}`);
-                row.classList.add('removing');
-                
-                fetch('{{ url_for("remove_exercise_from_day") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        day_id: dayId,
-                        exercise_id: exerciseId
-                    })
+  function removeExerciseFromDay(dayId, exerciseId) {
+    Swal.fire({
+        title: 'Remove Exercise?',
+        text: "Are you sure you want to remove this exercise from the day?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const row = document.getElementById(`exercise-row-${exerciseId}`);
+            row.classList.add('removing');
+            
+            fetch('{{ url_for("remove_exercise_from_day") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    day_id: dayId,
+                    exercise_id: exerciseId
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        setTimeout(() => {
-                            row.remove();
-                            // Check if this was the last exercise
-                            const exerciseTable = document.getElementById(`day-${dayId}-exercises`);
-                            if (exerciseTable.rows.length === 1) { // Only header row left
-                                exerciseTable.innerHTML = `
-                                    <tr>
-                                        <td colspan="3" class="text-center py-4 text-muted">
-                                            <i class="fas fa-dumbbell fa-2x mb-2 d-block"></i>
-                                            No exercises added yet
-                                        </td>
-                                    </tr>
-                                `;
-                            }
-                        }, 300);
-                    } else {
-                        row.classList.remove('removing');
-                        Swal.fire('Error', 'Failed to remove exercise', 'error');
-                    }
-                })
-                .catch(error => {
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    setTimeout(() => {
+                        row.remove();
+                        // Check if this was the last exercise
+                        const exerciseTable = document.getElementById(`day-${dayId}-exercises`);
+                        const exerciseRows = exerciseTable.querySelectorAll('tbody > tr:not(.removing)');
+                        
+                        if (exerciseRows.length === 0) { // No exercise rows left
+                            exerciseTable.innerHTML = `
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="fas fa-dumbbell fa-2x mb-2 d-block"></i>
+                                        No exercises added yet
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }, 300);
+                } else {
                     row.classList.remove('removing');
-                    Swal.fire('Error', 'An error occurred', 'error');
-                });
-            }
-        });
-    }
-
+                    Swal.fire('Error', 'Failed to remove exercise', 'error');
+                }
+            })
+            .catch(error => {
+                row.classList.remove('removing');
+                Swal.fire('Error', 'An error occurred', 'error');
+            });
+        }
+    });
+}
+  function removeExerciseFromDay(dayId, exerciseId) {
+    Swal.fire({
+        title: 'Remove Exercise?',
+        text: "Are you sure you want to remove this exercise from the day?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const row = document.getElementById(`exercise-row-${exerciseId}`);
+            row.classList.add('removing');
+            
+            fetch('{{ url_for("remove_exercise_from_day") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    day_id: dayId,
+                    exercise_id: exerciseId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    setTimeout(() => {
+                        row.remove();
+                        // Check if this was the last exercise
+                        const exerciseTable = document.getElementById(`day-${dayId}-exercises`);
+                        const exerciseRows = exerciseTable.querySelectorAll('tbody > tr:not(.removing)');
+                        
+                        if (exerciseRows.length === 0) { // No exercise rows left
+                            exerciseTable.innerHTML = `
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        <i class="fas fa-dumbbell fa-2x mb-2 d-block"></i>
+                                        No exercises added yet
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }, 300);
+                } else {
+                    row.classList.remove('removing');
+                    Swal.fire('Error', 'Failed to remove exercise', 'error');
+                }
+            })
+            .catch(error => {
+                row.classList.remove('removing');
+                Swal.fire('Error', 'An error occurred', 'error');
+            });
+        }
+    });
+}
     function editDayName(dayId) {
         const currentName = document.querySelector(`#dayHeading${dayId} .btn-link`).textContent.trim();
         Swal.fire({
