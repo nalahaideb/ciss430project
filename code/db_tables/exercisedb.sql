@@ -107,6 +107,7 @@ CREATE TABLE Exercise_Progress (
     sets_completed INT NOT NULL,
     reps_completed INT NOT NULL,
     weight_used DECIMAL(5,2),
+    duration INT,  -- ✅ newly added
     notes TEXT,
     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (entry_id) REFERENCES Exercise_Entry(entry_id) ON DELETE CASCADE

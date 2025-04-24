@@ -552,15 +552,16 @@ def get_plan_days(plan_id):
 def get_day_exercises(day_id):
     conn = connect()
     try:
-        with conn.cursor() as cursor:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute("""
-                SELECT epe.entry_id, e.ename 
-                FROM Exercise_Entry epe
-                JOIN Exercises e ON epe.eid = e.eid
-                WHERE epe.did = %s
-                ORDER BY epe.exercise_order
+                SELECT ee.entry_id, e.ename, e.etype, e.ebpart, e.eequip,
+                       ee.sets, ee.reps, ee.duration, ee.notes
+                FROM Exercise_Entry ee
+                JOIN Exercises e ON ee.eid = e.eid
+                WHERE ee.did = %s
             """, (day_id,))
-            return jsonify(cursor.fetchall())
+            exercises = cursor.fetchall()
+            return jsonify(exercises)
     finally:
         conn.close()
 
@@ -593,22 +594,33 @@ def get_progress_history(entry_id):
             return jsonify(cursor.fetchall())
     finally:
         conn.close()
+        
 #move to backend
 @app.route('/save_progress/<int:entry_id>', methods=['POST'])
 @login_required
 def save_progress(entry_id):
     conn = connect()
+
+    def null_if_empty(val):
+        return val if val not in ['', None] else None
+
     try:
         with conn.cursor() as cursor:
+            print("Checking entry ownership for entry_id:", entry_id)
             cursor.execute("""
-            SELECT ee.entry_id FROM Exercise_Entry ee
-            JOIN Exercise_Plan_Day epd ON ee.did = epd.did
-            JOIN Exercise_Plan ep ON epd.pid = ep.pid
-            WHERE ee.entry_id = %s AND ep.uid = %s
+                SELECT ee.entry_id FROM Exercise_Entry ee
+                JOIN Exercise_Plan_Day epd ON ee.did = epd.did
+                JOIN Exercise_Plan ep ON epd.pid = ep.pid
+                WHERE ee.entry_id = %s AND ep.uid = %s
             """, (entry_id, current_user.id))
+
             if not cursor.fetchone():
+                print("Unauthorized access to entry_id:", entry_id)
                 return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
             data = request.get_json()
+            print("Received data:", data)
+
             cursor.execute("""
                 INSERT INTO Exercise_Progress (
                     entry_id,
@@ -621,19 +633,23 @@ def save_progress(entry_id):
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 entry_id,
-                data['sets_completed'],
-                data['reps_completed'],
-                data.get('weight_used'),
-                data.get('duration'),
-                data.get('notes'),
+                int(data['sets_completed']),
+                int(data['reps_completed']),
+                null_if_empty(data.get('weight_used')),
+                null_if_empty(data.get('duration')),
+                null_if_empty(data.get('notes')),
                 data['recorded_at']
             ))
+
             conn.commit()
+            print("Progress successfully saved.")
             return jsonify({'success': True})
     except Exception as e:
         conn.rollback()
+        print("SAVE_PROGRESS ERROR:", str(e))
         return jsonify({'success': False, 'message': str(e)}), 500
-    conn.close()
+    finally:
+        conn.close()
 
 @app.route('/<username>/progress')
 @login_required

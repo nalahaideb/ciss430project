@@ -172,20 +172,6 @@
                                 <label for="progress-exercise-select">Exercise</label>
                                 <select class="form-control" id="progress-exercise-select" required>
                                     <option value="">-- Select Exercise --</option>
-                                    {% for day in main_plan.days %}
-                                    <div class="tab-pane fade" id="day-{{ day.did }}">
-                                      <div class="day-exercises">
-                                        {% for exercise in day.exercises %}
-                                        <div class="card exercise-card">
-                                          <!-- Exercise details rendered here -->
-                                          <h5>{{ exercise.ename }}</h5>
-                                          <span>{{ exercise.etype }}</span>
-                                          <!-- More exercise attributes... -->
-                                        </div>
-                                        {% endfor %}
-                                      </div>
-                                    </div>
-                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
@@ -230,21 +216,20 @@ $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
 
     // When plan is selected, load the full plan overview
-     $('#plan-select').change(function() {
+    $('#plan-select').change(function() {
         const planId = $(this).val();
         if (!planId) {
-            $('#progress-day-select').empty().prop('disabled', true);
+            $('#progress-day-select').empty().append('<option value="">-- Select Day --</option>').prop('disabled', true);
+            $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>').prop('disabled', true);
             return;
         }
 
-        // Clear existing options
         $('#progress-day-select').empty().append('<option value="">-- Select Day --</option>');
-        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>')
-                                     .prop('disabled', true);
+        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>').prop('disabled', true);
 
-        // Fetch days for selected plan
         $.get(`/get_plan_days/${planId}`)
             .done(function(days) {
+                $('#progress-day-select').prop('disabled', false);
                 days.forEach(day => {
                     $('#progress-day-select').append(
                         `<option value="${day.did}">${day.day_name}</option>`
@@ -254,98 +239,51 @@ $(document).ready(function() {
             .fail(function() {
                 showToast('Error', 'Failed to load days', 'danger');
             });
+
+        loadPlanOverview(planId);
     });
 
-    // SINGLE handler for day selection (not nested)
+    // When a day is selected, populate the exercises dropdown
     $('#progress-day-select').change(function() {
         const dayId = $(this).val();
         const $exerciseSelect = $('#progress-exercise-select');
-        
-        $exerciseSelect.empty().append('<option value="">-- Select Exercise --</option>');
-        $exerciseSelect.prop('disabled', true);
-        
+
+        $exerciseSelect.empty().append('<option value="">-- Select Exercise --</option>').prop('disabled', true);
+
         if (!dayId) return;
 
-        $.ajax({
-            url: `/get_day_exercises/${dayId}`,
-            method: 'GET',
-            dataType: 'json',
-            success: function(exercises) {
-                $exerciseSelect.prop('disabled', false);
-                
-                if (exercises.length === 0) {
-                    $exerciseSelect.append(
-                        '<option value="" disabled>No exercises found</option>'
-                    );
-                    return;
-                }
-                
-                exercises.forEach(ex => {
-                    $exerciseSelect.append(
-                        `<option value="${ex.entry_id}"
+        $.get(`/get_day_exercises/${dayId}`, function(exercises) {
+            if (exercises.length === 0) {
+                $exerciseSelect.append('<option value="" disabled>No exercises found</option>');
+                return;
+            }
+
+            $exerciseSelect.prop('disabled', false);
+            exercises.forEach(ex => {
+                $exerciseSelect.append(
+                    `<option value="${ex.entry_id}"
                              data-sets="${ex.sets || ''}"
                              data-reps="${ex.reps || ''}"
                              data-duration="${ex.duration || ''}"
                              data-etype="${ex.etype || ''}">
-                            ${ex.ename} (${ex.sets}x${ex.reps})
-                        </option>`
-                    );
-                });
-            },
-            error: function() {
-                showToast('Error', 'Failed to load exercises', 'danger');
-                $exerciseSelect.append(
-                    '<option value="" disabled>Error loading exercises</option>'
-                );
-            }
-        });
-    });
-    // Fetch days for selected plan
-        $.get(`/get_plan_days/${planId}`, function(days) {
-            days.forEach(day => {
-                $('#progress-day-select').append(
-                    `<option value="${day.did}">${day.day_name}</option>`
-                );
-            });
-        }).fail(function() {
-            showToast('Error', 'Failed to load days', 'danger');
-        });
-    });
-
-    // When a day is selected, populate exercises dropdown
-    $('#progress-day-select').change(function() {
-        const dayId = $(this).val();
-        if (!dayId) return;
-
-        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>');
-
-        $.get(`/get_day_exercises/${dayId}`, function(exercises) {
-            exercises.forEach(ex => {
-                $('#progress-exercise-select').append(
-                    `<option value="${ex.entry_id}"
-                             data-sets="${ex.sets}"
-                             data-reps="${ex.reps}"
-                             data-duration="${ex.duration}"
-                             data-etype="${ex.etype}">
-                        ${ex.ename} (${ex.etype})
+                        ${ex.ename} (${ex.sets}x${ex.reps})
                     </option>`
                 );
             });
         }).fail(function() {
             showToast('Error', 'Failed to load exercises', 'danger');
+            $exerciseSelect.append('<option value="" disabled>Error loading exercises</option>');
         });
     });
 
-    // When exercise is selected, update form placeholders
+    // When exercise is selected, update placeholders
     $('#progress-exercise-select').change(function() {
         const selected = $(this).find('option:selected');
         if (!selected.val()) return;
 
-        // Update placeholders with planned values
         $('#sets-completed').attr('placeholder', `Planned: ${selected.data('sets') || 'N/A'}`);
         $('#reps-completed').attr('placeholder', `Planned: ${selected.data('reps') || 'N/A'}`);
-        
-        // Handle cardio vs strength exercises
+
         if (selected.data('etype').toLowerCase().includes('cardio')) {
             $('#weight-used').prop('disabled', true).val('');
             $('#duration').prop('disabled', false)
@@ -358,76 +296,63 @@ $(document).ready(function() {
 
     // Handle form submission
     $('#progress-form').submit(function(e) {
-        e.preventDefault();
-        
-        const entryId = $('#progress-exercise-select').val();
-        if (!entryId) {
-            showToast('Error', 'Please select an exercise', 'danger');
-            return;
-        }
+    e.preventDefault();
+    
+    const entryId = $('#progress-exercise-select').val();
+    console.log("entryId being used:", entryId);
+    
+    if (!entryId) {
+    showToast('Error', 'Please select an exercise', 'danger');
+    return;
+    }
 
-        const formData = {
-            sets_completed: $('#sets-completed').val(),
-            reps_completed: $('#reps-completed').val(),
-            weight_used: $('#weight-used').val(),
-            duration: $('#duration').val(),
-            notes: $('#notes').val(),
-            recorded_at: $('#progress-date').val() || new Date().toISOString().split('T')[0]
-        };
+    const formData = {
+    sets_completed: $('#sets-completed').val(),
+    reps_completed: $('#reps-completed').val(),
+    weight_used: $('#weight-used').val(),
+    duration: $('#duration').val(),
+    notes: $('#notes').val(),
+    recorded_at: $('#progress-date').val() || new Date().toISOString().split('T')[0]
+    };
 
-        // Basic validation
-        if (!formData.sets_completed || !formData.reps_completed) {
-            showToast('Error', 'Sets and reps are required', 'danger');
-            return;
-        }
-
-        $.ajax({
-            url: `/save_progress/${entryId}`,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData),
-            success: function(response) {
-                if (response.success) {
-                    showToast('Success', 'Progress saved!', 'success');
-                    $('#progress-form')[0].reset();
-                    // Reload the current plan view
-                    const currentPlanId = $('#plan-select').val();
-                    if (currentPlanId) loadPlanOverview(currentPlanId);
-                } else {
-                    showToast('Error', response.message || 'Error saving progress', 'danger');
-                }
-            },
-            error: function() {
-                showToast('Error', 'Server error', 'danger');
-            }
-        });
+    $.ajax({
+    url: `/save_progress/${entryId}`,
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(formData),
+    success: function(response) {
+    if (response.success) {
+    showToast('Success', 'Progress saved!', 'success');
+    $('#progress-form')[0].reset();
+    const currentPlanId = $('#plan-select').val();
+    if (currentPlanId) loadPlanOverview(currentPlanId);
+    } else {
+    showToast('Error', response.message || 'Error saving progress', 'danger');
+    }
+    },
+    error: function() {
+    showToast('Error', 'Server error', 'danger');
+    }
     });
+    });
+
 
     // Function to load the full plan overview
     function loadPlanOverview(planId) {
-        // If this is the initial plan already loaded, just show it
         if (planId === $('#plan-overview').data('initial-plan-id')) {
             $('#plan-overview').show();
             return;
         }
 
         $.get(`/get_plan_overview/${planId}`, function(plan) {
-            // Update plan header
             $('#plan-name').text(plan.plan_name);
             $('#plan-description').text(plan.description || "No description available.");
-            
-            // Update progress summary
             $('#total-workouts').text(plan.total_workouts || 0);
             $('#completed-exercises').text(plan.completion_rate ? plan.completion_rate + '%' : '0%');
             $('#last-workout').text(plan.last_workout ? new Date(plan.last_workout).toLocaleDateString() : 'Never');
-            
-            // Build day tabs
+
             buildDayTabs(plan.days);
-            
-            // Show the plan overview
             $('#plan-overview').show();
-            
-            // Set up "Record Progress" buttons
             setupRecordProgressButtons();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error("Error loading plan:", textStatus, errorThrown);
@@ -435,15 +360,13 @@ $(document).ready(function() {
         });
     }
 
-    // Helper function to build day tabs and content
     function buildDayTabs(days) {
         const dayTabs = $('#day-tabs');
         const dayContent = $('#day-tabs-content');
         dayTabs.empty();
         dayContent.empty();
-        
+
         days.forEach((day, index) => {
-            // Create tab
             const tabClass = index === 0 ? 'active' : '';
             dayTabs.append(`
                 <li class="nav-item">
@@ -452,8 +375,7 @@ $(document).ready(function() {
                     </a>
                 </li>
             `);
-            
-            // Create tab content
+
             const contentClass = index === 0 ? 'show active' : '';
             const dayDiv = $(`
                 <div class="tab-pane fade ${contentClass}" id="day-${day.did}" role="tabpanel">
@@ -461,13 +383,10 @@ $(document).ready(function() {
                 </div>
             `);
             dayContent.append(dayDiv);
-            
-            // Populate exercises for this day
             populateDayExercises(day);
         });
     }
 
-    // Helper function to populate exercises for a day
     function populateDayExercises(day) {
         const exercisesContainer = $(`#day-${day.did}-exercises`);
         day.exercises.forEach(exercise => {
@@ -484,7 +403,7 @@ $(document).ready(function() {
                     ${progress.notes ? `<div class="text-muted small mt-1">${progress.notes}</div>` : ''}
                 </div>
             `).join('');
-            
+
             exercisesContainer.append(`
                 <div class="card mb-3 exercise-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -500,11 +419,8 @@ $(document).ready(function() {
                             </span>
                         </div>
                         ${exercise.notes ? `<div class="alert alert-light mb-3">${exercise.notes}</div>` : ''}
-                        
                         <h6 class="mt-3">Progress History</h6>
-                        ${exercise.progress.length > 0 ? progressItems : 
-                            '<div class="text-muted">No progress recorded yet for this exercise.</div>'}
-                        
+                        ${exercise.progress.length > 0 ? progressItems : '<div class="text-muted">No progress recorded yet for this exercise.</div>'}
                         <button class="btn btn-sm btn-outline-primary mt-3 record-exercise-btn" 
                             data-entry-id="${exercise.entry_id}" 
                             data-exercise-name="${exercise.ename}"
@@ -517,29 +433,23 @@ $(document).ready(function() {
         });
     }
 
-    // Helper function to setup record progress buttons
     function setupRecordProgressButtons() {
         $('.record-exercise-btn').click(function() {
             const entryId = $(this).data('entry-id');
-            const exerciseName = $(this).data('exercise-name');
             const dayId = $(this).data('day-id');
-            
             $('#progress-day-select').val(dayId).trigger('change');
-            $('#progress-exercise-select').val(entryId);
-            
-            // Scroll to the progress form
+            setTimeout(() => $('#progress-exercise-select').val(entryId), 300);
+
             $('html, body').animate({
                 scrollTop: $('#progress-form-collapse').offset().top - 20
             }, 500);
-            
-            // Expand the form if it's collapsed
+
             if ($('#progress-form-collapse').hasClass('collapse')) {
                 $('#progress-form-collapse').collapse('show');
             }
         });
     }
 
-    // Helper function to show toast notifications
     function showToast(title, message, type) {
         const toast = $(`
             <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000" 
@@ -560,7 +470,7 @@ $(document).ready(function() {
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // Load the main plan if one is selected by default
+    // Load main plan on page load
     const initialPlanId = $('#plan-select').val();
     if (initialPlanId) {
         loadPlanOverview(initialPlanId);
