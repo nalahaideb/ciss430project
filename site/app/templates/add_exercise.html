@@ -9,61 +9,61 @@
                     <h4 class="mb-0">Add New Exercise to Database</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('add_exercise_to_db') }}">
-                        <!-- Exercise Name -->
-                        <div class="form-group">
-                            <label for="name">Exercise Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        
-                        <!-- Muscle Group -->
-                        <div class="form-group">
-                            <label for="muscle">Primary Muscle Group</label>
-                            <select class="form-control" id="muscle" name="muscle" required>
-                                <option value="" disabled selected>Select muscle group</option>
-                                {% for muscle in muscle_groups %}
-                                <option value="{{ muscle }}">{{ muscle }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Equipment -->
-                        <div class="form-group">
-                            <label for="equipment">Equipment</label>
-                            <select class="form-control" id="equipment" name="equipment">
-                                <option value="" selected>None required</option>
-                                {% for equip in equipment_list %}
-                                <option value="{{ equip }}">{{ equip }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Exercise Type -->
-                        <div class="form-group">
-                            <label for="type">Exercise Type</label>
-                            <select class="form-control" id="type" name="type">
-                                {% for type in exercise_types %}
-                                <option value="{{ type.lower() }}">{{ type }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Description -->
-                        <div class="form-group">
-                            <label for="description">Description (Optional)</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('exercise_list', username=current_user.username) }}" 
-                               class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Save Exercise
-                            </button>
-                        </div>
-                    </form>
+                  <form method="POST" action="{{ url_for('add_exercise_to_db', username=username) }}">
+                    <!-- Exercise Name -->
+                    <div class="form-group">
+                      <label for="name">Exercise Name</label>
+                      <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <!-- Muscle Group -->
+                    <div class="form-group">
+                      <label for="muscle">Primary Muscle Group</label>
+                      <select class="form-control" id="muscle" name="muscle" required>
+                        <option value="" disabled selected>Select muscle group</option>
+                        {% for muscle in muscle_groups %}
+                        <option value="{{ muscle }}">{{ muscle }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    
+                    <!-- Equipment -->
+                    <div class="form-group">
+                      <label for="equipment">Equipment</label>
+                      <select class="form-control" id="equipment" name="equipment">
+                        <option value="" selected>None required</option>
+                        {% for equip in equipment_list %}
+                        <option value="{{ equip }}">{{ equip }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    
+                    <!-- Exercise Type -->
+                    <div class="form-group">
+                      <label for="type">Exercise Type</label>
+                      <select class="form-control" id="type" name="type">
+                        {% for type in exercise_types %}
+                        <option value="{{ type.lower() }}">{{ type }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="form-group">
+                      <label for="description">Description (Optional)</label>
+                      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                      <a href="{{ url_for('exercise_list', username=current_user.username) }}" 
+                         class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                      </a>
+                      <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Exercise
+                      </button>
+                    </div>
+                  </form>
                 </div>
             </div>
         </div>

@@ -11,7 +11,7 @@
                 <!-- <button type="submit" form="exercise-selection-form" class="btn btn-action btn-add-exercise mr-2 mb-2"> -->
                 <!--     <i class="fas fa-plus-circle mr-1"></i>Add Exercise -->
                 <!-- </button> -->
-                <a href="#############" class="btn btn-action btn-add-to-db mr-2 mb-2">
+                <a href="{{ url_for('add_exercise_to_db', username=user.username) }}" class="btn btn-action btn-add-to-db mr-2 mb-2">
                     <i class="fas fa-database mr-1"></i>Add a New Exercise to the Database
                 </a>
                 <a href="{{ url_for('progress', username=user.username) }}" class="btn btn-action btn-progress mr-2 mb-2">

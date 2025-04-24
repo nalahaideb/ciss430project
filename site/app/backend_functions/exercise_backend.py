@@ -19,6 +19,29 @@ def list_muscles():
         i = i.replace(' ', '')
     return muscle_arr
 
+
+def list_types():
+    conn = connect()
+    c = conn.cursor()
+    c.execute("SELECT GROUP_CONCAT(DISTINCT etype SEPARATOR ', ') AS etype FROM Exercises;")
+    type_arr = c.fetchall()
+    type_string = str(type_arr[0])
+    type_string = type_string[11:len(type_string)-2]
+    type_string = type_string.replace('"','')
+    type_string = type_string.replace("'",'')
+    type_arr = type_string.split(',')
+    print("TYPE ARR=", type_arr)
+    ret = []
+    for i in type_arr:
+        #i dont know why it always prefaces each i with a space after the first entry, but this is a quick fix
+        if i[0] == ' ':
+            i = i[1:]
+        ret.append(i)
+
+    c.close()
+    conn.close()
+    return ret
+
 #defaults to selecting all equipment if nothing is selected
 def list_equipment():
     conn = connect()
@@ -398,3 +421,18 @@ def create_default_plan(user):
         conn.rollback()
         return None
     conn.close()
+
+def insert_exercise(exercise):
+    conn = connect()
+    c = conn.cursor()
+    exercise = str(exercise)
+    exercise = exercise[1:len(exercise) - 1]
+    print("""INSERT INTO Exercises (ename, etype, ebpart, eequip) values (%s);""" % (exercise))
+    try:
+        c.execute("""INSERT INTO Exercises (ename, etype, ebpart, eequip) values (%s);""" % (exercise))
+        conn.commit()
+        print("SUCCESS")
+    except Exception as e:
+        print(f"Error adding new exercise: {e}")
+        conn.rollback()
+        return None

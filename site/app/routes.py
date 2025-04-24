@@ -388,7 +388,7 @@ def exercise_list(username):
         ex_level = request.form.get('ex_level')
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
-
+        name = '' #add element from search form
         session['muscle_groups'] = muscle_groups
         session['ex_level'] = ex_level
         session['selected_equipment'] = selected_equipment
@@ -670,15 +670,14 @@ def progress(username):
                          user=current_user,
                          plan=plan)
 
-#dont forget to add this back to exercise_list.html: <!-- IMPLEMENT THIS LATER{{ url_for('add_exercise_to_db') }} -->
-
-@app.route('/<username>/add_exercise_to_db')
+#dont forget to add this back to exercise_list.html: <!-- IMPLEMENT THIS LATER {{ url_for('add_exercise_to_db') }} -->
+@app.route('/<username>/add_exercise_to_db', methods=['POST', 'GET'])
 @login_required
 def add_exercise_to_db(username):
     if current_user.username != username:
         return redirect(url_for('login'))
+    
     if request.method == 'POST':
-        # Get form data
         name = request.form.get('name')
         muscle = request.form.get('muscle')
         equipment = request.form.get('equipment')
@@ -686,28 +685,30 @@ def add_exercise_to_db(username):
         
         if not name or not muscle:
             flash('Name and muscle group are required', 'error')
-            return redirect(url_for('add_exercise_to_db'))
+            return redirect(url_for('add_exercise_to_db', username=current_user.username)) 
+        if not equipment:
+            equipment = "None"
+        if not exercise_type:
+            exercise_type = "Other"
+        exercise = []
+        exercise.append(name) #, exercise_type, muscle, equipment
+        exercise.append(exercise_type)
+        exercise.append(muscle)
+        exercise.append(equipment)
         try:
-            
-            db.session.add(new_exercise)
+            insert_exercise(exercise)
             db.session.commit()
-            
             flash('Exercise added successfully!', 'success')
             return redirect(url_for('exercise_list', username=current_user.username))
-            
         except Exception as e:
-            db.session.rollback()
             flash(f'Error adding exercise: {str(e)}', 'error')
-            return redirect(url_for('add_exercise_to_db'))
+            return redirect(url_for('add_exercise_to_db', username=current_user.username))
+    muscle_groups = list_muscles()
+    equipment_list = list_equipment()
+    exercise_types = list_types()
     
-    # For GET request, show the form
-    # muscle_groups = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Abs', 'Cardio']
-    # equipment_list = ['Dumbbell', 'Barbell', 'Machine', 'Bodyweight', 'Kettlebell', 
-    #                  'Resistance Band', 'Cable', 'None']
-    # exercise_types = ['Strength', 'Cardio', 'Flexibility']
-    return redirect(url_for('add_exercise_to_database.html'))
-
     return render_template('add_exercise.html', 
                          muscle_groups=muscle_groups,
                          equipment_list=equipment_list,
-                         exercise_types=exercise_types)
+                         exercise_types=exercise_types,
+                         username=current_user.username)  
