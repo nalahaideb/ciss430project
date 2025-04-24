@@ -543,7 +543,8 @@ def get_plan_days(plan_id):
                 WHERE pid = %s ORDER BY day_order
             """, (plan_id,))
             return jsonify(cursor.fetchall())
-    finally:
+    except Exception as e:
+        print("Error retrieving days:", str(e))
         conn.close()
 
 @app.route('/get_day_exercises/<int:day_id>')
@@ -576,7 +577,7 @@ def get_exercise_details(entry_id):
             return jsonify(cursor.fetchone())
     finally:
         conn.close()
-
+#move to backend
 @app.route('/get_progress_history/<int:entry_id>')
 @login_required
 def get_progress_history(entry_id):
@@ -592,24 +593,46 @@ def get_progress_history(entry_id):
             return jsonify(cursor.fetchall())
     finally:
         conn.close()
-
+#move to backend
 @app.route('/save_progress/<int:entry_id>', methods=['POST'])
 @login_required
 def save_progress(entry_id):
-    data = request.json
     conn = connect()
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO Exercise_Progress 
-                (entry_id, sets_completed, reps_completed, weight_used, notes)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (entry_id, data['sets_completed'], data['reps_completed'], 
-                 data.get('weight_used'), data.get('notes')))
+            SELECT ee.entry_id FROM Exercise_Entry ee
+            JOIN Exercise_Plan_Day epd ON ee.did = epd.did
+            JOIN Exercise_Plan ep ON epd.pid = ep.pid
+            WHERE ee.entry_id = %s AND ep.uid = %s
+            """, (entry_id, current_user.id))
+            if not cursor.fetchone():
+                return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+            data = request.get_json()
+            cursor.execute("""
+                INSERT INTO Exercise_Progress (
+                    entry_id,
+                    sets_completed,
+                    reps_completed,
+                    weight_used,
+                    duration,
+                    notes,
+                    recorded_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                entry_id,
+                data['sets_completed'],
+                data['reps_completed'],
+                data.get('weight_used'),
+                data.get('duration'),
+                data.get('notes'),
+                data['recorded_at']
+            ))
             conn.commit()
             return jsonify({'success': True})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         conn.close()
 
@@ -618,12 +641,30 @@ def save_progress(entry_id):
 def progress(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-    plan = get_main_plan_with_days(current_user.id)
+    now_utc = datetime.now(pytz.utc)
+    central_timezone = pytz.timezone('America/Chicago')
+    now_local = now_utc.astimezone(central_timezone)
     
-    return render_template('progress.html', 
-                         user=current_user,
-                         plan=plan)
+    main_plan = None
+    if current_user.main_pid:
+        main_plan = prog_main_plan_get(current_user.id, current_user.main_pid)
+    
+    user_plans = get_user_plans(current_user.id)
+    print("main and user plans", main_plan, "\n\n\n", user_plans)
+    return render_template('progress.html',
+                           now_local=now_local,
+                           user=current_user,
+                           user_plans=user_plans,
+                           main_plan=main_plan)
 
+@app.route('/get_plan_overview/<int:plan_id>')
+@login_required
+def get_plan_overview(plan_id):
+    plan = prog_main_plan_get(current_user.id, plan_id)
+    if not plan:
+        return jsonify({'error': 'Plan not found or not authorized'}), 404
+    return jsonify(plan)
+        
 #dont forget to add this back to exercise_list.html: <!-- IMPLEMENT THIS LATER {{ url_for('add_exercise_to_db') }} -->
 @app.route('/<username>/add_exercise_to_db', methods=['POST', 'GET'])
 @login_required

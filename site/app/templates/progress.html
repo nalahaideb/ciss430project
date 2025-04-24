@@ -2,88 +2,208 @@
 {% block title %}Progress Tracker{% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-md-8 mx-auto">
+    <div class="col-md-10 mx-auto">
+        <!-- Plan Selection Card -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4 class="mb-0">Track Your Progress</h4>
+                <h4 class="mb-0">Your Workout Progress</h4>
             </div>
             <div class="card-body">
-                <!-- Plan Selection -->
                 <div class="form-group">
                     <label for="plan-select">Select Plan:</label>
                     <select class="form-control" id="plan-select">
                         <option value="">-- Select Plan --</option>
-                        {% if user_plans %}
-                            {% for plan in user_plans %}
-                                <option value="{{ plan.pid }}">{{ plan.plan_name }}</option>
-                            {% endfor %}
-                        {% endif %}
+                        {% for plan in user_plans %}
+                            <option value="{{ plan.pid }}" 
+                                {% if main_plan and plan.pid == main_plan.pid %}selected{% endif %}>
+                                {{ plan.plan_name }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
+            </div>
+        </div>
 
-                <!-- Day Selection (will be populated via JavaScript) -->
-                <div class="form-group" id="day-select-container" style="display: none;">
-                    <label for="day-select">Select Day:</label>
-                    <select class="form-control" id="day-select">
-                        <option value="">-- Select Day --</option>
-                    </select>
-                </div>
-
-                <!-- Exercise Selection (will be populated via JavaScript) -->
-                <div class="form-group" id="exercise-select-container" style="display: none;">
-                    <label for="exercise-select">Select Exercise:</label>
-                    <select class="form-control" id="exercise-select">
-                        <option value="">-- Select Exercise --</option>
-                    </select>
-                </div>
-
-                <!-- Progress Form (shown when exercise is selected) -->
-                <div id="progress-form-container" style="display: none;">
-                    <hr>
-                    <h5 class="mb-3">Record Your Performance</h5>
-                    <form id="progress-form">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="sets-completed">Sets Completed</label>
-                                <input type="number" class="form-control" id="sets-completed" min="1" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="reps-completed">Reps Completed</label>
-                                <input type="number" class="form-control" id="reps-completed" min="1" required>
+        <div class="card mb-4" id="plan-overview" {% if not main_plan %}style="display: none;"{% endif %}
+             data-initial-plan-id="{% if main_plan %}{{ main_plan.pid }}{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0" id="plan-name">{% if main_plan %}{{ main_plan.plan_name }}{% else %}Plan Name{% endif %}</h4>
+                <button class="btn btn-sm btn-outline-secondary" id="set-main-plan-btn">
+                    Set as Main Plan
+                </button>
+            </div>
+            <div class="card-body">
+                <p id="plan-description">{% if main_plan %}{{ main_plan.description or "No description available." }}{% else %}Loading plan details...{% endif %}</p>
+                
+                <!-- Progress Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Workouts</h5>
+                                <p class="card-text display-4" id="total-workouts">{% if main_plan %}{{ main_plan.total_workouts or 0 }}{% else %}0{% endif %}</p>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="weight-used">Weight Used (lbs)</label>
-                            <input type="number" class="form-control" id="weight-used" min="0" step="0.5">
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Completed</h5>
+                                <p class="card-text display-4" id="completed-exercises">{% if main_plan %}{{ main_plan.completion_rate or 0 }}%{% else %}0%{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Last Workout</h5>
+                                <p class="card-text" id="last-workout">{% if main_plan and main_plan.last_workout %}{{ main_plan.last_workout.strftime('%Y-%m-%d') }}{% else %}Never{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Days Navigation -->
+                <ul class="nav nav-tabs" id="day-tabs" role="tablist">
+                    {% if main_plan and main_plan.days %}
+                        {% for day in main_plan.days %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if loop.first %}active{% endif %}" 
+                               id="day-{{ day.did }}-tab" 
+                               data-toggle="tab" 
+                               href="#day-{{ day.did }}" 
+                               role="tab">
+                                {{ day.day_name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+                
+                <!-- Days Content -->
+                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="day-tabs-content">
+                    {% if main_plan and main_plan.days %}
+                        {% for day in main_plan.days %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="day-{{ day.did }}" 
+                             role="tabpanel">
+                            <div class="day-exercises" id="day-{{ day.did }}-exercises">
+                                {% for exercise in day.exercises %}
+                                <div class="card mb-3 exercise-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">{{ exercise.ename }}</h5>
+                                        <span class="badge badge-secondary">{{ exercise.etype }}</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">{{ exercise.ebpart }} • {{ exercise.eequip or 'No equipment' }}</span>
+                                            <span class="font-weight-bold">
+                                                {{ exercise.sets }} sets × {{ exercise.reps }} reps
+                                                {% if exercise.duration %}for {{ exercise.duration }} min{% endif %}
+                                            </span>
+                                        </div>
+                                        {% if exercise.notes %}
+                                        <div class="alert alert-light mb-3">{{ exercise.notes }}</div>
+                                        {% endif %}
+                                        
+                                        <h6 class="mt-3">Progress History</h6>
+                                        {% if exercise.progress %}
+                                            {% for progress in exercise.progress %}
+                                            <div class="progress-item mb-2 p-2 border rounded">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="font-weight-bold">{{ progress.recorded_at.strftime('%Y-%m-%d') }}</span>
+                                                    <span>
+                                                        {{ progress.sets_completed }} sets × {{ progress.reps_completed }} reps
+                                                        {% if progress.weight_used %}@ {{ progress.weight_used }} lbs{% endif %}
+                                                        {% if progress.duration %}for {{ progress.duration }} min{% endif %}
+                                                    </span>
+                                                </div>
+                                                {% if progress.notes %}
+                                                <div class="text-muted small mt-1">{{ progress.notes }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="text-muted">No progress recorded yet for this exercise.</div>
+                                        {% endif %}
+                                        
+                                        <button class="btn btn-sm btn-outline-primary mt-3 record-exercise-btn" 
+                                            data-entry-id="{{ exercise.entry_id }}" 
+                                            data-exercise-name="{{ exercise.ename }}"
+                                            data-day-id="{{ day.did }}">
+                                            Record Progress
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Record New Progress Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Record New Progress</h5>
+                <button class="btn btn-sm btn-outline-primary" type="button" data-toggle="collapse" 
+                        data-target="#progress-form-collapse" aria-expanded="true">
+                    Toggle
+                </button>
+            </div>
+            <div class="collapse show" id="progress-form-collapse">
+                <div class="card-body">
+                    <form id="progress-form">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="progress-day-select">Day</label>
+                                <select class="form-control" id="progress-day-select" required>
+                                    <option value="">-- Select Day --</option>
+                                    {% if main_plan and main_plan.days %}
+                                        {% for day in main_plan.days %}
+                                        <option value="{{ day.did }}">{{ day.day_name }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="progress-exercise-select">Exercise</label>
+                                <select class="form-control" id="progress-exercise-select" required>
+                                    <option value="">-- Select Exercise --</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="progress-date">Date</label>
+                                <input type="date" class="form-control" id="progress-date" required 
+                                       value="{{ now_local }}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="sets-completed">Sets</label>
+                                <input type="number" class="form-control" id="sets-completed" min="1" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="reps-completed">Reps</label>
+                                <input type="number" class="form-control" id="reps-completed" min="1" required>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="weight-used">Weight (lbs)</label>
+                                <input type="number" class="form-control" id="weight-used" min="0" step="0.5">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="duration">Duration (min)</label>
+                                <input type="number" class="form-control" id="duration" min="1">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="notes">Notes</label>
-                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                            <textarea class="form-control" id="notes" rows="2"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Save Progress</button>
                     </form>
-                </div>
-
-                <!-- Progress History -->
-                <div class="mt-4" id="progress-history" style="display: none;">
-                    <hr>
-                    <h5>Progress History</h5>
-                    <div class="table-responsive">
-                        <table class="table table-striped" id="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Sets</th>
-                                    <th>Reps</th>
-                                    <th>Weight</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Will be populated via JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -92,117 +212,350 @@
 
 <script>
 $(document).ready(function() {
-    // When plan is selected, load days
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // When plan is selected, load the full plan overview
     $('#plan-select').change(function() {
         const planId = $(this).val();
         if (planId) {
-            $.get(`/get_plan_days/${planId}`, function(days) {
-                const daySelect = $('#day-select');
-                daySelect.empty().append('<option value="">-- Select Day --</option>');
-                days.forEach(day => {
-                    daySelect.append(`<option value="${day.did}">${day.day_name}</option>`);
-                });
-                $('#day-select-container').show();
-                $('#exercise-select-container, #progress-form-container, #progress-history').hide();
-            });
+            loadPlanOverview(planId);
+            $('#set-main-plan-btn').show();
         } else {
-            $('#day-select-container, #exercise-select-container, #progress-form-container, #progress-history').hide();
+            $('#plan-overview').hide();
+            $('#set-main-plan-btn').hide();
         }
     });
 
-    // When day is selected, load exercises
-    $('#day-select').change(function() {
-        const dayId = $(this).val();
-        if (dayId) {
-            $.get(`/get_day_exercises/${dayId}`, function(exercises) {
-                const exerciseSelect = $('#exercise-select');
-                exerciseSelect.empty().append('<option value="">-- Select Exercise --</option>');
-                exercises.forEach(ex => {
-                    exerciseSelect.append(`<option value="${ex.entry_id}">${ex.ename}</option>`);
-                });
-                $('#exercise-select-container').show();
-                $('#progress-form-container, #progress-history').hide();
-            });
-        } else {
-            $('#exercise-select-container, #progress-form-container, #progress-history').hide();
-        }
-    });
-
-    // When exercise is selected, show progress form and load history
-    $('#exercise-select').change(function() {
-        const entryId = $(this).val();
-        if (entryId) {
-            // Load exercise details to pre-fill form
-            $.get(`/get_exercise_details/${entryId}`, function(exercise) {
-                $('#sets-completed').attr('placeholder', `Planned: ${exercise.sets}`);
-                $('#reps-completed').attr('placeholder', `Planned: ${exercise.reps}`);
-                $('#progress-form-container').show();
-            });
-
-            // Load progress history
-            $.get(`/get_progress_history/${entryId}`, function(history) {
-                const tableBody = $('#history-table tbody');
-                tableBody.empty();
-                if (history.length > 0) {
-                    history.forEach(record => {
-                        tableBody.append(`
-                            <tr>
-                                <td>${new Date(record.recorded_at).toLocaleDateString()}</td>
-                                <td>${record.sets_completed}</td>
-                                <td>${record.reps_completed}</td>
-                                <td>${record.weight_used || '-'}</td>
-                                <td>${record.notes || '-'}</td>
-                            </tr>
-                        `);
-                    });
-                    $('#progress-history').show();
+    // Set main plan button
+    $('#set-main-plan-btn').click(function() {
+        const planId = $('#plan-select').val();
+        if (planId) {
+            $.post('/set_main_plan', { plan_id: planId }, function(response) {
+                if (response.success) {
+                    showToast('Success', 'Main plan updated successfully!', 'success');
+                } else {
+                    showToast('Error', response.message || 'Failed to update main plan', 'danger');
                 }
+            }).fail(function() {
+                showToast('Error', 'Failed to update main plan', 'danger');
             });
-        } else {
-            $('#progress-form-container, #progress-history').hide();
         }
     });
 
-    // Handle progress form submission
+    // When a plan is selected, populate days dropdown
+    $('#plan-select').change(function() {
+        const planId = $(this).val();
+        if (!planId) return;
+
+        // Clear existing options
+        $('#progress-day-select').empty().append('<option value="">-- Select Day --</option>');
+        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>');
+
+        // Fetch days for selected plan
+        $.get(`/get_plan_days/${planId}`, function(days) {
+            days.forEach(day => {
+                $('#progress-day-select').append(
+                    `<option value="${day.did}">${day.day_name}</option>`
+                );
+            });
+        }).fail(function() {
+            showToast('Error', 'Failed to load days', 'danger');
+        });
+    });
+
+    // When a day is selected, populate exercises dropdown
+    $('#progress-day-select').change(function() {
+        const dayId = $(this).val();
+        if (!dayId) return;
+
+        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>');
+
+        $.get(`/get_day_exercises/${dayId}`, function(exercises) {
+            exercises.forEach(ex => {
+                $('#progress-exercise-select').append(
+                    `<option value="${ex.entry_id}"
+                             data-sets="${ex.sets}"
+                             data-reps="${ex.reps}"
+                             data-duration="${ex.duration}"
+                             data-etype="${ex.etype}">
+                        ${ex.ename} (${ex.etype})
+                    </option>`
+                );
+            });
+        }).fail(function() {
+            showToast('Error', 'Failed to load exercises', 'danger');
+        });
+    });
+
+    // When exercise is selected, update form placeholders
+    $('#progress-exercise-select').change(function() {
+        const selected = $(this).find('option:selected');
+        if (!selected.val()) return;
+
+        // Update placeholders with planned values
+        $('#sets-completed').attr('placeholder', `Planned: ${selected.data('sets') || 'N/A'}`);
+        $('#reps-completed').attr('placeholder', `Planned: ${selected.data('reps') || 'N/A'}`);
+        
+        // Handle cardio vs strength exercises
+        if (selected.data('etype').toLowerCase().includes('cardio')) {
+            $('#weight-used').prop('disabled', true).val('');
+            $('#duration').prop('disabled', false)
+                         .attr('placeholder', `Planned: ${selected.data('duration') || 'N/A'} mins`);
+        } else {
+            $('#weight-used').prop('disabled', false);
+            $('#duration').prop('disabled', true).val('').removeAttr('placeholder');
+        }
+    });
+
+    // Handle form submission
     $('#progress-form').submit(function(e) {
         e.preventDefault();
-        const entryId = $('#exercise-select').val();
-        const progressData = {
+        
+        const entryId = $('#progress-exercise-select').val();
+        if (!entryId) {
+            showToast('Error', 'Please select an exercise', 'danger');
+            return;
+        }
+
+        const formData = {
             sets_completed: $('#sets-completed').val(),
             reps_completed: $('#reps-completed').val(),
             weight_used: $('#weight-used').val(),
-            notes: $('#notes').val()
+            duration: $('#duration').val(),
+            notes: $('#notes').val(),
+            recorded_at: $('#progress-date').val() || new Date().toISOString().split('T')[0]
         };
 
-        $.post(`/save_progress/${entryId}`, progressData, function(response) {
-            if (response.success) {
-                alert('Progress saved successfully!');
-                // Refresh history
-                $('#exercise-select').trigger('change');
-                // Clear form
-                $('#progress-form')[0].reset();
-            } else {
-                alert('Error saving progress: ' + response.message);
+        // Basic validation
+        if (!formData.sets_completed || !formData.reps_completed) {
+            showToast('Error', 'Sets and reps are required', 'danger');
+            return;
+        }
+
+        $.ajax({
+            url: `/save_progress/${entryId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    showToast('Success', 'Progress saved!', 'success');
+                    $('#progress-form')[0].reset();
+                    // Reload the current plan view
+                    const currentPlanId = $('#plan-select').val();
+                    if (currentPlanId) loadPlanOverview(currentPlanId);
+                } else {
+                    showToast('Error', response.message || 'Error saving progress', 'danger');
+                }
+            },
+            error: function() {
+                showToast('Error', 'Server error', 'danger');
             }
         });
     });
+
+    // Function to load the full plan overview
+    function loadPlanOverview(planId) {
+        // If this is the initial plan already loaded, just show it
+        if (planId === $('#plan-overview').data('initial-plan-id')) {
+            $('#plan-overview').show();
+            return;
+        }
+
+        $.get(`/get_plan_overview/${planId}`, function(plan) {
+            // Update plan header
+            $('#plan-name').text(plan.plan_name);
+            $('#plan-description').text(plan.description || "No description available.");
+            
+            // Update progress summary
+            $('#total-workouts').text(plan.total_workouts || 0);
+            $('#completed-exercises').text(plan.completion_rate ? plan.completion_rate + '%' : '0%');
+            $('#last-workout').text(plan.last_workout ? new Date(plan.last_workout).toLocaleDateString() : 'Never');
+            
+            // Build day tabs
+            buildDayTabs(plan.days);
+            
+            // Show the plan overview
+            $('#plan-overview').show();
+            
+            // Set up "Record Progress" buttons
+            setupRecordProgressButtons();
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error("Error loading plan:", textStatus, errorThrown);
+            showToast('Error', 'Failed to load plan details', 'danger');
+        });
+    }
+
+    // Helper function to build day tabs and content
+    function buildDayTabs(days) {
+        const dayTabs = $('#day-tabs');
+        const dayContent = $('#day-tabs-content');
+        dayTabs.empty();
+        dayContent.empty();
+        
+        days.forEach((day, index) => {
+            // Create tab
+            const tabClass = index === 0 ? 'active' : '';
+            dayTabs.append(`
+                <li class="nav-item">
+                    <a class="nav-link ${tabClass}" id="day-${day.did}-tab" data-toggle="tab" href="#day-${day.did}" role="tab">
+                        ${day.day_name}
+                    </a>
+                </li>
+            `);
+            
+            // Create tab content
+            const contentClass = index === 0 ? 'show active' : '';
+            const dayDiv = $(`
+                <div class="tab-pane fade ${contentClass}" id="day-${day.did}" role="tabpanel">
+                    <div class="day-exercises" id="day-${day.did}-exercises"></div>
+                </div>
+            `);
+            dayContent.append(dayDiv);
+            
+            // Populate exercises for this day
+            populateDayExercises(day);
+        });
+    }
+
+    // Helper function to populate exercises for a day
+    function populateDayExercises(day) {
+        const exercisesContainer = $(`#day-${day.did}-exercises`);
+        day.exercises.forEach(exercise => {
+            const progressItems = exercise.progress.map(progress => `
+                <div class="progress-item mb-2 p-2 border rounded">
+                    <div class="d-flex justify-content-between">
+                        <span class="font-weight-bold">${new Date(progress.recorded_at).toLocaleDateString()}</span>
+                        <span>
+                            ${progress.sets_completed} sets × ${progress.reps_completed} reps
+                            ${progress.weight_used ? `@ ${progress.weight_used} lbs` : ''}
+                            ${progress.duration ? `for ${progress.duration} min` : ''}
+                        </span>
+                    </div>
+                    ${progress.notes ? `<div class="text-muted small mt-1">${progress.notes}</div>` : ''}
+                </div>
+            `).join('');
+            
+            exercisesContainer.append(`
+                <div class="card mb-3 exercise-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">${exercise.ename}</h5>
+                        <span class="badge badge-secondary">${exercise.etype}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">${exercise.ebpart} • ${exercise.eequip || 'No equipment'}</span>
+                            <span class="font-weight-bold">
+                                ${exercise.sets} sets × ${exercise.reps} reps
+                                ${exercise.duration ? `for ${exercise.duration} min` : ''}
+                            </span>
+                        </div>
+                        ${exercise.notes ? `<div class="alert alert-light mb-3">${exercise.notes}</div>` : ''}
+                        
+                        <h6 class="mt-3">Progress History</h6>
+                        ${exercise.progress.length > 0 ? progressItems : 
+                            '<div class="text-muted">No progress recorded yet for this exercise.</div>'}
+                        
+                        <button class="btn btn-sm btn-outline-primary mt-3 record-exercise-btn" 
+                            data-entry-id="${exercise.entry_id}" 
+                            data-exercise-name="${exercise.ename}"
+                            data-day-id="${day.did}">
+                            Record Progress
+                        </button>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    // Helper function to setup record progress buttons
+    function setupRecordProgressButtons() {
+        $('.record-exercise-btn').click(function() {
+            const entryId = $(this).data('entry-id');
+            const exerciseName = $(this).data('exercise-name');
+            const dayId = $(this).data('day-id');
+            
+            $('#progress-day-select').val(dayId).trigger('change');
+            $('#progress-exercise-select').val(entryId);
+            
+            // Scroll to the progress form
+            $('html, body').animate({
+                scrollTop: $('#progress-form-collapse').offset().top - 20
+            }, 500);
+            
+            // Expand the form if it's collapsed
+            if ($('#progress-form-collapse').hasClass('collapse')) {
+                $('#progress-form-collapse').collapse('show');
+            }
+        });
+    }
+
+    // Helper function to show toast notifications
+    function showToast(title, message, type) {
+        const toast = $(`
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000" 
+                 style="position: fixed; bottom: 20px; right: 20px; min-width: 250px;">
+                <div class="toast-header bg-${type} text-white">
+                    <strong class="mr-auto">${title}</strong>
+                    <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `);
+        $('body').append(toast);
+        toast.toast('show');
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Load the main plan if one is selected by default
+    const initialPlanId = $('#plan-select').val();
+    if (initialPlanId) {
+        loadPlanOverview(initialPlanId);
+    }
 });
 </script>
 
 <style>
-    .progress-card {
-        background-color: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .exercise-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(0,0,0,0.125);
     }
-    .progress-card h5 {
+    .exercise-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
         color: #8e24aa;
-        margin-bottom: 15px;
+        font-weight: 600;
+        border-bottom: 2px solid #8e24aa;
     }
-    #history-table th {
+    .progress-item {
         background-color: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+    .progress-item:hover {
+        background-color: #e9ecef;
+    }
+    .record-exercise-btn {
+        transition: all 0.2s;
+    }
+    .record-exercise-btn:hover {
+        transform: scale(1.02);
+    }
+    #set-main-plan-btn {
+        display: none;
+    }
+    #progress-form input:disabled {
+        background-color: #e9ecef;
     }
 </style>
 {% endblock %}

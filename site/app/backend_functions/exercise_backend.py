@@ -435,3 +435,152 @@ def insert_exercise(exercise):
         print(f"Error adding new exercise: {e}")
         conn.rollback()
         return None
+
+def prog_main_plan_get(user_id, plan_id):
+    conn = connect()
+    c = conn.cursor()
+    c.execute("""
+    SELECT pid, plan_name FROM Exercise_Plan 
+    WHERE uid = %s ORDER BY creation_date DESC
+    """, (user_id,))
+    user_plans = c.fetchall()
+            
+    if not plan_id:
+        return None
+
+    c.execute("""
+    SELECT pid, plan_name, description FROM Exercise_Plan 
+    WHERE pid = %s
+    """, (plan_id,))
+    main_plan = c.fetchone()
+    
+    if not main_plan:
+        return None
+                
+    c.execute("""
+    SELECT did, day_name, day_order 
+    FROM Exercise_Plan_Day 
+    WHERE pid = %s 
+    ORDER BY day_order
+    """, (main_plan['pid'],))
+    main_plan['days'] = c.fetchall()
+    
+    for day in main_plan['days']:
+        c.execute("""
+        SELECT 
+        ee.entry_id, ee.sets, ee.reps, ee.duration, ee.notes,
+        e.eid, e.ename, e.etype, e.ebpart, e.eequip
+        FROM Exercise_Entry ee
+        JOIN Exercises e ON ee.eid = e.eid
+        WHERE ee.did = %s
+        ORDER BY ee.exercise_order
+        """, (day['did'],))
+        day['exercises'] = c.fetchall()
+                
+    for exercise in day['exercises']:
+        c.execute("""
+        SELECT 
+        sets_completed, reps_completed, weight_used, notes, 
+        recorded_at
+        FROM Exercise_Progress
+        WHERE entry_id = %s
+        ORDER BY recorded_at DESC
+        """, (exercise['entry_id'],))
+        exercise['progress'] = c.fetchall()
+    conn.close()    
+    return main_plan
+    
+def prog_main_plan_get(user_id, main_plan_id):
+    conn = connect()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT pid, plan_name, description 
+                FROM Exercise_Plan 
+                WHERE pid = %s AND uid = %s
+            """, (main_plan_id, user_id))
+            plan = cursor.fetchone()
+            
+            if not plan:
+                return None
+                
+            cursor.execute("""
+                SELECT 
+                    COUNT(DISTINCT DATE(recorded_at)) as total_workouts,
+                    MAX(recorded_at) as last_workout
+                FROM Exercise_Progress ep
+                JOIN Exercise_Entry ee ON ep.entry_id = ee.entry_id
+                JOIN Exercise_Plan_Day epd ON ee.did = epd.did
+                WHERE epd.pid = %s
+            """, (plan['pid'],))
+            stats = cursor.fetchone()
+            
+            cursor.execute("""
+                SELECT 
+                    COUNT(DISTINCT ee.entry_id) as total_exercises,
+                    COUNT(DISTINCT CASE WHEN ep.entry_id IS NOT NULL THEN ee.entry_id END) as completed_exercises
+                FROM Exercise_Entry ee
+                JOIN Exercise_Plan_Day epd ON ee.did = epd.did
+                LEFT JOIN Exercise_Progress ep ON ee.entry_id = ep.entry_id
+                WHERE epd.pid = %s
+            """, (plan['pid'],))
+            completion = cursor.fetchone()
+            try:
+                completion_rate = round((completion['completed_exercises'] / completion['total_exercises']) * 100 if completion['total_exercises'] > 0 else 0)
+            except:
+                print("DIV BY ZERO!!!!!!!!!!!!!!!!!")
+            cursor.execute("""
+            SELECT did, day_name, day_order 
+            FROM Exercise_Plan_Day 
+            WHERE pid = %s 
+            ORDER BY day_order
+            """, (plan['pid'],))
+            plan['days'] = cursor.fetchall()
+            
+            for day in plan['days']:
+                cursor.execute("""
+                    SELECT 
+                        ee.entry_id, ee.sets, ee.reps, ee.duration, ee.notes,
+                        e.eid, e.ename, e.etype, e.ebpart, e.eequip
+                    FROM Exercise_Entry ee
+                    JOIN Exercises e ON ee.eid = e.eid
+                    WHERE ee.did = %s
+                    ORDER BY ee.exercise_order
+                """, (day['did'],))
+                day['exercises'] = cursor.fetchall()
+                
+                for exercise in day['exercises']:
+                    cursor.execute("""
+                        SELECT 
+                            sets_completed, reps_completed, weight_used, notes, 
+                            recorded_at
+                        FROM Exercise_Progress
+                        WHERE entry_id = %s
+                        ORDER BY recorded_at DESC
+                    """, (exercise['entry_id'],))
+                    exercise['progress'] = cursor.fetchall()
+            
+            return {
+                **plan,
+                'total_workouts': stats['total_workouts'],
+                'last_workout': stats['last_workout'],
+                'completion_rate': completion_rate
+            }
+    except Exception as e:
+        print("Error fetching plans/details:", str(e))
+    conn.close()
+
+def get_user_plans(user_id):
+    conn = connect()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT pid, plan_name 
+                FROM Exercise_Plan 
+                WHERE uid = %s 
+                ORDER BY creation_date DESC
+            """, (user_id,))
+            return cursor.fetchall()
+    except Exception as e:
+        print("Error fetching plans/details:", str(e))
+    conn.close()
