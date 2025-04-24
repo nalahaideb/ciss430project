@@ -61,49 +61,48 @@ def list_equipment():
     conn.close()
     return ret
 
-def get_exercises(muscle_groups, equipment, level, name=None, offset=0, limit=10):
+def get_exercises(muscle_groups, equipment, level, name, offset=0, limit=10):
     conn = connect()
+    c = conn.cursor()
     try:
-        with conn.cursor() as c:
-            where_clauses = []
-            params = []
+        where_clauses = []
+        params = []
 
-            if muscle_groups:
-                where_clauses.append("ebpart IN %s")
-                params.append(tuple(muscle_groups))
-            if equipment:
-                where_clauses.append("eequip IN %s")
-                params.append(tuple(equipment))
-            if level:
-                where_clauses.append("etype = %s")
-                params.append(level)
-            if name:
-                where_clauses.append("ename LIKE %s")
-                params.append(f"%{name}%")
+        if muscle_groups:
+            where_clauses.append("ebpart IN %s")
+            params.append(tuple(muscle_groups))
+        if equipment:
+            where_clauses.append("eequip IN %s")
+            params.append(tuple(equipment))
+        if level:
+            where_clauses.append("etype = %s")
+            params.append(level)
+        if name:
+            where_clauses.append("ename LIKE %s")
+            params.append(f"%{name}%")
 
-            where_sql = " AND ".join(where_clauses)
-            if where_sql:
-                where_sql = "WHERE " + where_sql
+        where_sql = " AND ".join(where_clauses)
+        if where_sql:
+            where_sql = "WHERE " + where_sql
+            
+        count_sql = f"SELECT COUNT(*) as total FROM Exercises {where_sql}"
+        c.execute(count_sql, tuple(params))
+        total = c.fetchone()['total']
 
-            # 1. Get total count (for pagination)
-            count_sql = f"SELECT COUNT(*) as total FROM Exercises {where_sql}"
-            c.execute(count_sql, tuple(params))
-            total = c.fetchone()['total']
+        data_sql = f"""
+        SELECT eid, ename, etype, ebpart, eequip
+        FROM Exercises
+        {where_sql}
+        ORDER BY ename ASC
+        LIMIT %s OFFSET %s
+        """
+        c.execute(data_sql, tuple(params + [limit, offset]))
+        results = c.fetchall()
 
-            # 2. Get paginated data
-            data_sql = f"""
-                SELECT eid, ename, etype, ebpart, eequip
-                FROM Exercises
-                {where_sql}
-                ORDER BY ename ASC
-                LIMIT %s OFFSET %s
-            """
-            c.execute(data_sql, tuple(params + [limit, offset]))
-            results = c.fetchall()
-
-            return total, results
-    finally:
-        conn.close()
+        return total, results
+    except Exception as e:
+        print("Error fetching exercise list", str(e))
+    conn.close()
 
 def get_total_exercise_count(muscle_groups, equipment, level, name):
     conn = connect()
@@ -255,7 +254,7 @@ def add_exercises_to_day(day_id, exercise_ids):
                     """, (day_id, exercise_id))
                 result = cursor.fetchone()
                 count = result['count']
-                
+                #reordering the days when the plan is pulled up to correctly insert the exercises
                 if count == 0:
                     cursor.execute("""
                         INSERT INTO Exercise_Entry (did, eid, exercise_order, sets, reps)

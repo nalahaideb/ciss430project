@@ -17,12 +17,13 @@ from app.backend_functions.misc import *
 ############## WISHLIST, MARK AS NECESSARY ################
 ###########################################################
 
+add name to search query in exercise list []
 update plan [x]
 search plans []
 update days [x]
 "post" plans [] (make plans available for search)
 highlight current workouts on dashboard [x]
-add exercises to db []
+add exercises to db [x]
 progress page []
 progress graph on dashboard for current exercises []
 
@@ -54,8 +55,7 @@ def login():
             user = User.get_by_username(user.username)
             login_user(user)
             return redirect(url_for('dashboard', username=user.username))
-        flash('Invalid username or password.')
-        
+        flash('Invalid username or password.')    
     return render_template('login.html')
 
 @app.route('/register')
@@ -81,9 +81,7 @@ def dashboard(username):
     
     plan = get_main_plan_with_days(current_user.id)
     
-    return render_template('dashboard.html', 
-                         user=current_user,
-                         plan=plan)
+    return render_template('dashboard.html', user=current_user,plan=plan)
 
 @app.route('/<username>/profile')
 @login_required
@@ -91,14 +89,12 @@ def profile(username):
     user = User.get_by_username(username)
     if not user:
         return "User not found", 404
-
     is_own_profile = current_user.username == username
     show_add_friend = not is_own_profile
     request_status = None
     show_accept_reject = False
     request_sent = False
     frid = None
-
     if not is_own_profile:
         user.is_friend = is_friends(current_user.id, user.id)
 
@@ -114,37 +110,24 @@ def profile(username):
     pending_requests = get_friend_requests(current_user.id, limit=6) if is_own_profile else []
     sent_requests = get_sent_friend_requests(current_user.id, limit=6) if is_own_profile else []
 
-    return render_template(
-        'profile.html',
-        user=user,
-        show_add_friend=show_add_friend,
-        show_accept_reject=show_accept_reject,
-        request_sent=request_sent,
-        frid=frid,
-        pending_requests=pending_requests,
-        sent_requests=sent_requests
-    )
+    return render_template('profile.html',user=user,show_add_friend=show_add_friend,show_accept_reject=show_accept_reject,request_sent=request_sent,frid=frid,pending_requests=pending_requests,sent_requests=sent_requests)
 
 @app.route('/<username>/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile(username):
     if current_user.username != username:
         return redirect(url_for('login'))
-
     if request.method == 'POST':
         fname = request.form.get('fname')
         lname = request.form.get('lname')
         email = request.form.get('email')
         bio = request.form.get('bio')
-
         success = update_user_profile(current_user.id, current_user.ucid, fname, lname, email, bio)
         if success:
             flash('Profile updated successfully.')
         else:
             flash('An error occurred while updating your profile.')
-            
         return redirect(url_for('profile', username=username))
-    
     return render_template('edit_profile.html', user=current_user)
 
 @app.route('/<username>/friends', methods=['GET', 'POST'])
@@ -179,23 +162,10 @@ def friends(username):
     else:
         users = get_mutual_users(uid, limit=LIMIT + 1, offset=offset_users)
         right_header = "Suggested Users (Mutual Friends)"
-
     has_more_users = len(users) > LIMIT
     users = users[:LIMIT]
-
-    return render_template(
-        'friends.html',
-        user=current_user,
-        friends=friends,
-        users=users,
-        page_friends=page_friends,
-        page_users=page_users,
-        has_more_friends=has_more_friends,
-        has_more_users=has_more_users,
-        search_query=search_query,
-        right_header=right_header
+    return render_template('friends.html',user=current_user,friends=friends,users=users,page_friends=page_friends,page_users=page_users,has_more_friends=has_more_friends,has_more_users=has_more_users,search_query=search_query,right_header=right_header
     )
-
 
 @app.route('/add_friend/<int:uid>', methods=['POST'])
 @login_required
@@ -258,7 +228,6 @@ def cancel_friend_request_route(frid):
         flash("Failed to cancel friend request.")
     return redirect(request.referrer or url_for('profile', username=current_user.username))
 
-# MESSAGES
 @app.route('/<username>/messages', methods=['GET', 'POST'])
 @login_required
 def messages(username):
@@ -267,35 +236,22 @@ def messages(username):
 
     uid = current_user.id
     selected_uid = request.args.get('user', type=int)
-
-    # Automatically ensure a conversation entry exists
     if selected_uid and not conversation_exists(uid, selected_uid):
         send_message(uid, selected_uid, "[conversation started]")
-
-    # Handle sending a new message
     if request.method == 'POST' and selected_uid:
         message = request.form.get('message', '').strip()
         if message:
             send_message(uid, selected_uid, message)
         return redirect(url_for('messages', username=username, user=selected_uid))
 
-    # Fetch message participants
     friends = get_messaged_friends(uid)
-
-    # Fetch thread with selected user (if any)
     thread = []
     selected_user = None
     if selected_uid:
         thread = get_messages_between_users(uid, selected_uid)
         selected_user = next((f for f in friends if f['uid'] == selected_uid), None)
 
-    return render_template(
-        'messages.html',
-        user=current_user,
-        friends=friends,
-        selected_user=selected_user,
-        thread=thread
-    )
+    return render_template('messages.html',user=current_user,friends=friends,selected_user=selected_user,thread=thread)
 
         
 @app.route('/verify', methods=['POST', 'GET'])
@@ -308,34 +264,33 @@ def verify_user():
             email = request.form.get('email')
             password = request.form.get('password')
 
-            print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
+            #print(f"POST (OTP): user = {user}, otp_entered = {otp_entered}, otp_code = {otp_code}, email={email}, password={password}")
 
             if otp_entered == otp_code:
                 add_user(user, email, password)
                 user_obj = User.get_by_username(user)
                 if user_obj:
                     login_user(user_obj)
-                    print("POST (OTP): user verified\n")
+                    #print("POST (OTP): user verified\n")
                     return redirect(url_for('dashboard', username=user))
                 else:
-                    print("POST (OTP): user not found after code match")
+                    #print("POST (OTP): user not found after code match")
                     return render_template('verify.html', username=user, email=email, password=password,
                                            OTP_CODE=otp_code,
                                            error_message="Account lookup failed. Please register again.")
             else:
-                print("POST (OTP): Invalid OTP")
+                #print("POST (OTP): Invalid OTP")
                 return render_template('verify.html', username=user,
                                        error_message="Invalid OTP. Please try again.",
                                        OTP_CODE=otp_code,
                                        email=email,
                                        password=password)
 
-        # If this is the first registration form submit (before OTP)
         else:
             user = request.form.get('username')
             email = request.form.get('email')
             password = request.form.get('password')
-            print("POST (Reg): USER INFO =", user, email, password)
+            #print("POST (Reg): USER INFO =", user, email, password)
 
             if user and email and password:
                 valid = verify_new_user(user, email)
@@ -344,15 +299,13 @@ def verify_user():
                     send_auth_email(email, user, otp)
                     return render_template('verify.html', username=user, email=email, password=password, OTP_CODE=otp)
                 else:
-                    print("POST (Reg): Non-unique credentials")
+                    #print("POST (Reg): Non-unique credentials")
                     return render_template('register.html',
                                            error_message="Username or email already exists")
             else:
-                print("POST (Reg): Missing form values")
+                #print("POST (Reg): Missing form values")
                 return render_template('register.html',
                                        error_message="All fields are required.")
-
-    # GET method: show the registration page
     return render_template('register.html')
 
 @app.route('/<username>/exercise_list', methods=['GET', 'POST'])
@@ -366,7 +319,7 @@ def exercise_list(username):
     muscle_groups = []
     selected_equipment = []
     ex_level = None
-    name = 'fuuuuuuuuuuuuuuuuuuuuuuuck'
+    name = ''
 
     page = int(request.args.get('page', 1))
     per_page = 10
