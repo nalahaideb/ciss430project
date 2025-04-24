@@ -172,6 +172,20 @@
                                 <label for="progress-exercise-select">Exercise</label>
                                 <select class="form-control" id="progress-exercise-select" required>
                                     <option value="">-- Select Exercise --</option>
+                                    {% for day in main_plan.days %}
+                                    <div class="tab-pane fade" id="day-{{ day.did }}">
+                                      <div class="day-exercises">
+                                        {% for exercise in day.exercises %}
+                                        <div class="card exercise-card">
+                                          <!-- Exercise details rendered here -->
+                                          <h5>{{ exercise.ename }}</h5>
+                                          <span>{{ exercise.etype }}</span>
+                                          <!-- More exercise attributes... -->
+                                        </div>
+                                        {% endfor %}
+                                      </div>
+                                    </div>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
@@ -216,43 +230,77 @@ $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
 
     // When plan is selected, load the full plan overview
-    $('#plan-select').change(function() {
+     $('#plan-select').change(function() {
         const planId = $(this).val();
-        if (planId) {
-            loadPlanOverview(planId);
-            $('#set-main-plan-btn').show();
-        } else {
-            $('#plan-overview').hide();
-            $('#set-main-plan-btn').hide();
+        if (!planId) {
+            $('#progress-day-select').empty().prop('disabled', true);
+            return;
         }
-    });
-
-    // Set main plan button
-    $('#set-main-plan-btn').click(function() {
-        const planId = $('#plan-select').val();
-        if (planId) {
-            $.post('/set_main_plan', { plan_id: planId }, function(response) {
-                if (response.success) {
-                    showToast('Success', 'Main plan updated successfully!', 'success');
-                } else {
-                    showToast('Error', response.message || 'Failed to update main plan', 'danger');
-                }
-            }).fail(function() {
-                showToast('Error', 'Failed to update main plan', 'danger');
-            });
-        }
-    });
-
-    // When a plan is selected, populate days dropdown
-    $('#plan-select').change(function() {
-        const planId = $(this).val();
-        if (!planId) return;
 
         // Clear existing options
         $('#progress-day-select').empty().append('<option value="">-- Select Day --</option>');
-        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>');
+        $('#progress-exercise-select').empty().append('<option value="">-- Select Exercise --</option>')
+                                     .prop('disabled', true);
 
         // Fetch days for selected plan
+        $.get(`/get_plan_days/${planId}`)
+            .done(function(days) {
+                days.forEach(day => {
+                    $('#progress-day-select').append(
+                        `<option value="${day.did}">${day.day_name}</option>`
+                    );
+                });
+            })
+            .fail(function() {
+                showToast('Error', 'Failed to load days', 'danger');
+            });
+    });
+
+    // SINGLE handler for day selection (not nested)
+    $('#progress-day-select').change(function() {
+        const dayId = $(this).val();
+        const $exerciseSelect = $('#progress-exercise-select');
+        
+        $exerciseSelect.empty().append('<option value="">-- Select Exercise --</option>');
+        $exerciseSelect.prop('disabled', true);
+        
+        if (!dayId) return;
+
+        $.ajax({
+            url: `/get_day_exercises/${dayId}`,
+            method: 'GET',
+            dataType: 'json',
+            success: function(exercises) {
+                $exerciseSelect.prop('disabled', false);
+                
+                if (exercises.length === 0) {
+                    $exerciseSelect.append(
+                        '<option value="" disabled>No exercises found</option>'
+                    );
+                    return;
+                }
+                
+                exercises.forEach(ex => {
+                    $exerciseSelect.append(
+                        `<option value="${ex.entry_id}"
+                             data-sets="${ex.sets || ''}"
+                             data-reps="${ex.reps || ''}"
+                             data-duration="${ex.duration || ''}"
+                             data-etype="${ex.etype || ''}">
+                            ${ex.ename} (${ex.sets}x${ex.reps})
+                        </option>`
+                    );
+                });
+            },
+            error: function() {
+                showToast('Error', 'Failed to load exercises', 'danger');
+                $exerciseSelect.append(
+                    '<option value="" disabled>Error loading exercises</option>'
+                );
+            }
+        });
+    });
+    // Fetch days for selected plan
         $.get(`/get_plan_days/${planId}`, function(days) {
             days.forEach(day => {
                 $('#progress-day-select').append(

@@ -4,6 +4,7 @@ from datetime import datetime
 from app.db import get_db_connection as connect
 
 #defaults to selecting all muscles if nothing is selected
+#somehow we never had ANY back exercises??
 def list_muscles():
     conn = connect()
     c = conn.cursor()
@@ -17,6 +18,8 @@ def list_muscles():
     muscle_arr = muscle_string.split(',')
     for i in muscle_arr:
         i = i.replace(' ', '')
+    #thank you kaggle for your very EPIC dataset
+    muscle_arr.append('Back')
     return muscle_arr
 
 
@@ -575,10 +578,10 @@ def get_user_plans(user_id):
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT pid, plan_name 
-                FROM Exercise_Plan 
-                WHERE uid = %s 
-                ORDER BY creation_date DESC
+            SELECT pid, plan_name 
+            FROM Exercise_Plan 
+            WHERE uid = %s 
+            ORDER BY creation_date DESC
             """, (user_id,))
             return cursor.fetchall()
     except Exception as e:

@@ -633,8 +633,7 @@ def save_progress(entry_id):
     except Exception as e:
         conn.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
-        conn.close()
+    conn.close()
 
 @app.route('/<username>/progress')
 @login_required
@@ -677,7 +676,6 @@ def add_exercise_to_db(username):
         muscle = request.form.get('muscle')
         equipment = request.form.get('equipment')
         exercise_type = request.form.get('type')
-        
         if not name or not muscle:
             flash('Name and muscle group are required', 'error')
             return redirect(url_for('add_exercise_to_db', username=current_user.username)) 
@@ -686,7 +684,7 @@ def add_exercise_to_db(username):
         if not exercise_type:
             exercise_type = "Other"
         exercise = []
-        exercise.append(name) #, exercise_type, muscle, equipment
+        exercise.append(name)
         exercise.append(exercise_type)
         exercise.append(muscle)
         exercise.append(equipment)
