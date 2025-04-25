@@ -10,13 +10,13 @@
                 </div>
                 <div class="card-body">
                   <form method="POST" action="{{ url_for('add_exercise_to_db', username=username) }}">
-                    <!-- Exercise Name -->
+                    <!--Exercise Name -->
                     <div class="form-group">
                       <label for="name">Exercise Name</label>
                       <input type="text" class="form-control" id="name" name="name" required>
                     </div>
                     
-                    <!-- Muscle Group -->
+                    <!--Muscle Group -->
                     <div class="form-group">
                       <label for="muscle">Primary Muscle Group</label>
                       <select class="form-control" id="muscle" name="muscle" required>
@@ -27,7 +27,7 @@
                       </select>
                     </div>
                     
-                    <!-- Equipment -->
+                    <!--Equipment -->
                     <div class="form-group">
                       <label for="equipment">Equipment</label>
                       <select class="form-control" id="equipment" name="equipment">
@@ -38,7 +38,7 @@
                       </select>
                     </div>
                     
-                    <!-- Exercise Type -->
+                    <!--Exercise Type -->
                     <div class="form-group">
                       <label for="type">Exercise Type</label>
                       <select class="form-control" id="type" name="type">
@@ -48,7 +48,7 @@
                       </select>
                     </div>
                     
-                    <!-- Description -->
+                    <!--Description -->
                     <div class="form-group">
                       <label for="description">Description (Optional)</label>
                       <textarea class="form-control" id="description" name="description" rows="3"></textarea>

@@ -12,7 +12,7 @@ web:
 	source venv/bin/activate
 	export FLASK_APP=flask_app.py
 	flask --app flask_app.py
-RETARD_MODE:
+new:
 	rm venv -r
 	python3 -m venv venv
 	source venv/bin/activate

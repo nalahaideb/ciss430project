@@ -1,11 +1,11 @@
-<!-- friends.html -->
+<!--friends.html -->
 {% extends "base.html" %}
 {% block title %}Friends{% endblock %}
 
 {% block content %}
 <h2 class="mb-4">Friends</h2>
 
-<!-- Search Form -->
+<!--Search Form -->
 <form method="POST" class="mb-4">
     <input type="text" name="search" id="friendSearch" class="form-control"
            placeholder="Search for friends or users..."
@@ -13,7 +13,7 @@
 </form>
 
 <div class="row">
-    <!-- Friends Column -->
+    <!--Friends Column -->
     <div class="col-md-6">
         <div class="card mb-4">
             <div class="card-header">Your Friends</div>
@@ -32,7 +32,7 @@
                     {% endif %}
                 </ul>
 
-                <!-- Pagination for Friends -->
+                <!--Pagination for Friends -->
                 <nav class="mt-3">
                     <ul class="pagination justify-content-center">
                         {% if page_friends > 1 %}
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <!-- Suggested Users / Search Results Column -->
+    <!--Suggested Users / Search Results Column -->
     <div class="col-md-6">
         <div class="card mb-4">
             <div class="card-header">
@@ -79,7 +79,7 @@
                     {% endif %}
                 </ul>
 
-                <!-- Pagination for Users -->
+                <!--Pagination for Users -->
                 <nav class="mt-3">
                     <ul class="pagination justify-content-center">
                         {% if page_users > 1 %}
@@ -105,8 +105,6 @@
         </div>
     </div>
 </div>
-
-<!-- Optional client-side JS filtering -->
 <script>
 document.getElementById('friendSearch').addEventListener('input', function () {
     const query = this.value.toLowerCase();

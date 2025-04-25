@@ -2,7 +2,7 @@
 {% block title %}Exercise Library{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <!-- Button Row -->
+    <!--Button Row -->
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="d-flex flex-wrap justify-content-start">
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <!-- Search Bar Row -->
+    <!--Search Bar Row -->
     <div class="row mb-3">
         <div class="col-md-6">
             <form method="POST" action="{{ url_for('exercise_list', username=user.username) }}" class="card shadow-sm">
@@ -48,7 +48,7 @@
     </div>
 
     <div class="row">
-        <!-- Filters Column -->
+        <!--Filters Column -->
         <div class="col-md-3">
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-primary text-white py-2">
@@ -93,7 +93,7 @@
                 </form>
             </div>
 
-            <!-- Active Filters Tags Section -->
+            <!--Active Filters Tags Section -->
             {% if muscle_groups or selected_equipment or name %}
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-info text-white py-2">
@@ -153,7 +153,7 @@
             {% endif %}
         </div>
 
-        <!-- Exercises Table Column -->
+        <!--Exercises Table Column -->
         <div class="col-md-6">
             <form method="POST" action="{{ url_for('add_exercises_to_workout') }}" id="exercise-selection-form">
                 <div class="card shadow-sm">
@@ -203,7 +203,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Pagination Footer -->
+                    <!--Pagination Footer -->
                     <div class="card-footer bg-light d-flex justify-content-between align-items-center py-2 px-3">
                       <small class="text-muted">
                         Showing {{ (page - 1) * per_page + 1 }}–{{ (page - 1) * per_page + exercises[1]|length }} of {{ total_items }}
@@ -241,7 +241,7 @@
             </form>
         </div>
 
-        <!-- Selection Panel Column -->
+        <!--Selection Panel Column -->
         <div class="col-md-3 pl-0">
             <div class="card shadow-sm h-100" style="border-left: 1px solid rgba(0,0,0,.125);">
                 <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">

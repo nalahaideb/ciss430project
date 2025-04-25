@@ -341,7 +341,7 @@ def exercise_list(username):
         muscle_groups = request.form.getlist('muscle_group')
         selected_equipment = request.form.getlist('equip_group')
         name = request.form.get('exname')
-        print("NAME=", name)
+        #print("NAME=", name)
         session['muscle_groups'] = muscle_groups
         session['ex_level'] = ex_level
         session['selected_equipment'] = selected_equipment
@@ -352,7 +352,6 @@ def exercise_list(username):
         ex_level = session.get('ex_level', None)
         selected_equipment = session.get('selected_equipment', [])
 
-    # Get paginated exercises
     exercises = get_exercises(muscle_groups, selected_equipment, ex_level, name, offset, per_page)
     total_items = get_total_exercise_count(muscle_groups, selected_equipment, ex_level, name)
     total_pages = (total_items + per_page - 1) // per_page
@@ -450,10 +449,10 @@ def add_to_plan():
     if request.method == 'POST':
         day_id = request.form.get('selected_day')
         selected_exercise_ids = request.form.getlist('selected_exercises')
-        print("SELECTED_EXERCISES", selected_exercise_ids)
+        #print("SELECTED_EXERCISES", selected_exercise_ids)
         selected_exercise_ids = [eid for eid in selected_exercise_ids if eid]
         
-        print("Day ID:", day_id)
+        #print("Day ID:", day_id)
         if not day_id:
             flash('Please select a day to add exercises to.')
             return redirect(url_for('exercise_plan', username=current_user.username))
@@ -545,7 +544,7 @@ def get_plan_days(plan_id):
             return jsonify(cursor.fetchall())
     except Exception as e:
         print("Error retrieving days:", str(e))
-        conn.close()
+    conn.close()
 
 @app.route('/get_day_exercises/<int:day_id>')
 @login_required
@@ -562,8 +561,9 @@ def get_day_exercises(day_id):
             """, (day_id,))
             exercises = cursor.fetchall()
             return jsonify(exercises)
-    finally:
-        conn.close()
+    except Exception as e:
+        print("ERROR:", str(e)
+    conn.close()
 
 @app.route('/get_exercise_details/<int:entry_id>')
 @login_required
@@ -576,8 +576,9 @@ def get_exercise_details(entry_id):
                 WHERE entry_id = %s
             """, (entry_id,))
             return jsonify(cursor.fetchone())
-    finally:
-        conn.close()
+    except Exception as e:
+        print("ERROR", str(e))
+    conn.close()
 #move to backend
 @app.route('/get_progress_history/<int:entry_id>')
 @login_required
@@ -592,8 +593,9 @@ def get_progress_history(entry_id):
                 ORDER BY recorded_at DESC
             """, (entry_id,))
             return jsonify(cursor.fetchall())
-    finally:
-        conn.close()
+    except Exception as e:
+        print("ERROR", str(e))
+    conn.close()
         
 #move to backend
 @app.route('/save_progress/<int:entry_id>', methods=['POST'])
@@ -648,8 +650,7 @@ def save_progress(entry_id):
         conn.rollback()
         print("SAVE_PROGRESS ERROR:", str(e))
         return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
-        conn.close()
+    conn.close()
 
 @app.route('/<username>/progress')
 @login_required
