@@ -30,7 +30,6 @@ def create_exercises():
         entry = []
         for i in exercise:
             entry.append(cleanup(i))
-            #dataset was made by actual honest to god fucking retards so there will be exclusions because there are commas in both the desc and title, no way to tell how many commas exist before the 'bodypart' field appears.
         try:
             c.execute("start transaction;")
             #enter the following values of entry deliniated by commas: 1, n-5, n-4, n-3, n-2, n-1, n
@@ -85,7 +84,6 @@ def insert_premade_days():
         print("TEST DAY INSERT FAILED: ", e)
     return
 
-#this is fucking up only sometimes, im certain its because its entering the same relation with friend1 and friend 2, whatever 
 def insert_test_friends():
     megalist = ''
     for i in range(1000):
@@ -111,7 +109,6 @@ def insert_premade_schedules():
         day_array = day_array + str(random.randrange(0,1000)) + '), '
         megalist = megalist + day_array
     try:
-        #print(megalist)
         megalist = megalist[:len(megalist)-3] + ')'
         c.execute("start transaction;")
         c.execute("insert into schedule (uid, d1, d2, d3, d4, d5, d6, d7) values " + megalist + ";")
