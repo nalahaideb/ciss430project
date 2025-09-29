@@ -1,4 +1,5 @@
 Title,Desc,Type,BodyPart,Equipment,Level,Rating,RatingDesc
+
 0,Partner plank band row,The partner plank band row is an abdominal exercise where two partners perform single-arm planks while pulling on the opposite ends of an exercise band. This technique can be done for time or reps in any ab-focused workout.,Strength,Abdominals,Bands,Intermediate,0.0,
 1,Banded crunch isometric hold,"The banded crunch isometric hold is an exercise targeting the abdominal muscles, particularly the rectus abdominis or ""six-pack"" muscles. The band adds resistance and continuous tension to this popular exercise.",Strength,Abdominals,Bands,Intermediate,,
 2,FYR Banded Plank Jack,"The banded plank jack is a variation on the plank that involves moving the legs in and out for repetitions. Having a band around the thighs forces the lower body to work harder, particularly the hips and glutes. The plank jack is commonly performed as part of a bodyweight circuit, or as part of a dynamic warm-up.",Strength,Abdominals,Bands,Intermediate,,
@@ -2917,3 +2918,4 @@ Title,Desc,Type,BodyPart,Equipment,Level,Rating,RatingDesc
 2915,EZ-Bar Skullcrusher - Gethin Variation,"The EZ-bar skullcrusher is a popular exercise targeting the triceps muscles. The EZ-bar is used more often than a straight bar. As for the name, that’s worst-case scenario. The bar should actually come down behind the head. It is usually performed for moderate to high reps as part of an upper body or arms-focused workout. No need to chase a 1RM on this move!",Strength,Triceps,E-Z Curl Bar,Intermediate,,
 2916,TBS Skullcrusher,"The EZ-bar skullcrusher is a popular exercise targeting the triceps muscles. The EZ-bar is used more often than a straight bar. As for the name, that’s worst-case scenario. The bar should actually come down behind the head. It is usually performed for moderate to high reps as part of an upper body or arms-focused workout. No need to chase a 1RM on this move!",Strength,Triceps,E-Z Curl Bar,Intermediate,,
 2917,30 Arms EZ-Bar Skullcrusher,,Strength,Triceps,E-Z Curl Bar,Intermediate,,
+
