@@ -181,10 +181,6 @@ if __name__ == '__main__':
     #path2 = "/home/student/work/ciss430project/data/megaGymDataset.csv"
     
     if conn:
-        #x = input()
-        # if x == 1:
-        #     create_exercises(conn, path1)
-        # else:
         create_exercises(conn, path)
         add_users(conn, 100)
         seed_friend_data(conn)
